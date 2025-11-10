@@ -10,10 +10,12 @@ function initMap() {
     map = L.map('map').setView([35.8617, 104.1954], 5);
     
     // 添加地图瓦片层
-    // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    //   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    //    maxZoom: 18
-    // }).addTo(map);
+    L.tileLayer('http://t{s}.tianditu.gov.cn/vec_w/wmts?service=wmts&request=GetTile&version=1.0.0&layer=vec&tilematrixset=w&tilematrix={z}&tilerow={y}&tilecol={x}&style=default&format=tiles', {
+      subdomains: '01234567',
+      tms: true,
+      attribution: '&copy; <a href="http://www.tianditu.gov.cn/">国家测绘地理信息局</a>',
+      maxZoom: 18
+    }).addTo(map);
     
     // 初始化标记聚合组 
     markerClusterGroup = L.markerClusterGroup({
