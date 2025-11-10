@@ -301,6 +301,29 @@ body {
     margin-bottom: 20px;
 }
 
+.club-quote {
+    display: block;
+    border-left: 4px solid #3498db !important;
+    background: #f8f9fa !important;
+    padding: 16px 20px !important;
+    margin: 16px 0 !important;
+    font-style: italic;
+    color: #555 !important;
+    border-radius: 0 8px 8px 0 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    position: relative;
+}
+
+.club-quote::before {
+    content: '"';
+    font-size: 48px;
+    color: #3498db;
+    position: absolute;
+    top: -10px;
+    left: 10px;
+    line-height: 1;
+}
+
 .club-tags {
     display: flex;
     flex-wrap: wrap;

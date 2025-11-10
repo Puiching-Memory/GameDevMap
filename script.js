@@ -103,14 +103,24 @@ function showClubDetails(club) {
     // 简介
     const descDiv = content.querySelector('.club-description');
     if (club.short_description || club.long_description) {
-        let desc = '';
+        descDiv.innerHTML = ''; // 清空内容
+        
         if (club.short_description) {
-            desc = `简介: ${club.short_description}`;
-            if (club.long_description) desc += ` ${club.long_description}`;
-        } else {
-            desc = club.long_description;
+            const blockquote = document.createElement('blockquote');
+            blockquote.className = 'club-quote';
+            blockquote.textContent = club.short_description;
+            descDiv.appendChild(blockquote);
         }
-        descDiv.textContent = desc;
+        
+        if (club.long_description) {
+            if (club.short_description) {
+                descDiv.appendChild(document.createElement('br'));
+            }
+            const paragraph = document.createElement('p');
+            paragraph.textContent = club.long_description;
+            paragraph.style.margin = '0';
+            descDiv.appendChild(paragraph);
+        }
     } else {
         descDiv.style.display = 'none';
     }
