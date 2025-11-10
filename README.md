@@ -12,7 +12,7 @@
 
 ```
 {
-  "id": "club-xxx",
+  "id": "club-en-name",
   "name": "社团名称",
   "school": "学校名称",
   "city": "城市",
