@@ -152,7 +152,8 @@ function showClubDetails(club) {
             a.href = link.url;
             a.target = '_blank';
             a.className = 'link-item';
-            a.textContent = `${link.type}: ${link.url}`;
+            a.textContent = link.type;
+            a.title = link.url;
             linksDiv.appendChild(a);
         });
     } else {
