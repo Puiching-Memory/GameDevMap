@@ -1,37 +1,26 @@
 let map;
 let markers = [];
 let clubsData = [];
-let markerClusterGroup;
 let currentProvinceFilter = null; // 当前选中的省份过滤器
 
-const TIANDITU_KEY = 'b71fab54427d58dbfa7204ec6951f591'; // 天地图 Key
+const AMAP_KEY = '62f275dfc2b00c300c0ea9842ed315ca';
 
 // 初始化地图
 function initMap() {
-    // 创建地图，默认聚焦中国
-    map = L.map('map').setView([35.8617, 104.1954], 5);
+    try {
+        // 创建地图实例，默认聚焦中国
+        map = new AMap.Map('map', {
+            zoom: 5,
+            center: [104.1954, 35.8617],
+            viewMode: '2D',
+            lang: 'zh_cn'
+        });
 
-    // 添加天地图矢量底图
-    L.tileLayer(`https://t0.tianditu.gov.cn/vec_w/wmts?tk=${TIANDITU_KEY}&SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`, {
-        subdomains: ['t0', 't1', 't2', 't3', 't4', 't5', 't6', 't7'],
-        attribution: '天地图 - 矢量地图'
-    }).addTo(map);
-
-    // 添加天地图矢量注记
-    L.tileLayer(`https://t0.tianditu.gov.cn/cva_w/wmts?tk=${TIANDITU_KEY}&SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cva&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`, {
-        subdomains: ['t0', 't1', 't2', 't3', 't4', 't5', 't6', 't7'],
-        attribution: '天地图 - 矢量注记'
-    }).addTo(map);
-    
-    // 初始化标记聚合组 
-    markerClusterGroup = L.markerClusterGroup({
-        disableClusteringAtZoom: 6,  // 不聚合的最大缩放级别
-        maxClusterRadius: 50,         // 聚合半径
-        spiderfyOnMaxZoom: true,      // 在最大缩放级别展开聚合
-        showCoverageOnHover: false,   // 鼠标悬停时不显示覆盖范围
-        zoomToBoundsOnClick: true     // 点击聚合时缩放到边界
-    });
-    map.addLayer(markerClusterGroup);
+        console.log('高德地图初始化成功');
+    } catch (error) {
+        console.error('地图初始化失败:', error);
+        alert('地图初始化失败，请检查网络连接。');
+    }
 }
 
 // 加载数据
@@ -50,45 +39,42 @@ async function loadData() {
 // 显示标记
 function displayMarkers(provinceFilter = null) {
     // 清除现有标记
-    markerClusterGroup.clearLayers();
+    markers.forEach(markerObj => {
+        map.remove(markerObj.marker);
+    });
     markers = [];
-    
+
     clubsData.forEach(club => {
         if (club.latitude && club.longitude) {
             // 如果有省份过滤器，检查是否匹配
             if (provinceFilter && provinceFilter !== 'all') {
-                if (provinceFilter === '其他') {
-                    // "其他"包括国外和没有省份信息的社团
-                    if (club.province && club.province !== '其他' && !isChineseProvince(club.province)) {
-                        // 跳过不符合条件的社团
-                    } else if (!club.province || isChineseProvince(club.province)) {
-                        return; // 跳过中国省份的社团
+                if (provinceFilter === '国外') {
+                    // "国外"包括国外和没有省份信息的社团
+                    if (!club.province || isChineseProvince(club.province)) {
+                        return; // 跳过中国省份和有省份信息的社团
                     }
                 } else if (club.province !== provinceFilter) {
                     return; // 跳过不匹配的省份
                 }
             }
-            
+
             const logoUrl = club.logo_url || 'assets/logos/placeholder.png';
-            const icon = L.icon({
-                iconUrl: logoUrl,
-                iconSize: [60, 60],     
-                iconAnchor: [30, 60],    // 调整锚点位置（图标中心底部）
-                popupAnchor: [0, -60],   // 调整弹出框位置
-                loading: 'lazy'
+
+            // 创建高德地图标记
+            const marker = new AMap.Marker({
+                position: [club.longitude, club.latitude], // 高德地图是[经度,纬度]
+                icon: logoUrl, // 直接使用URL字符串
+                title: club.name,
+                map: map,
+                offset: new AMap.Pixel(-30, -60) // 调整偏移，使图标底部中心对准坐标点
             });
-            
-            // 创建标记
-            const marker = L.marker([club.latitude, club.longitude], { icon })
-                .bindPopup(club.name);
-            
+
             // 添加点击事件
             marker.on('click', () => {
                 showClubDetails(club);
             });
-            
+
             markers.push({ marker, club });
-            markerClusterGroup.addLayer(marker);
         }
     });
 }
@@ -175,7 +161,7 @@ function showClubDetails(club) {
 
 // 定位到社团
 function locateClub(lat, lng) {
-    map.setView([lat, lng], 13);
+    map.setZoomAndCenter(13, [lng, lat]); // 高德地图是[经度,纬度]
 }
 
 // 搜索功能
@@ -366,8 +352,8 @@ function showProvinceClubs(province) {
     if (province === 'all') {
         // "全部"显示所有社团
         filteredClubs = clubsData;
-    } else if (province === '其他') {
-        // "其他"包括国外和没有省份信息的社团
+    } else if (province === '国外') {
+        // "国外"包括国外和没有省份信息的社团
         filteredClubs = clubsData.filter(club => 
             !club.province || !isChineseProvince(club.province)
         );
