@@ -1,8 +1,45 @@
-# 全国高校游戏社团地图
+# 全国高校游戏开发社团地图
 
-一个用于展示和连接全国高校游戏社团的互动地图网站。
+一个用于展示和链接全国高校游戏开发社团的互动地图网站。
 
 ## 快速开始
+
+### 添加社团数据
+
+编辑 `data/clubs.json` 文件，添加新的社团信息，并提交PR：
+
+```json
+{
+  "id": "club-xxx",
+  "name": "社团名称",
+  "school": "学校名称",
+  "city": "城市",
+  "province": "省份",
+  "latitude": 纬度,
+  "longitude": 经度,
+  "logo_url": "assets/logos/your-logo.png",
+  "short_description": "简短描述",
+  "long_description": "详细描述",
+  "external_links": [
+    {
+      "type": "website|social|email",
+      "url": "链接地址"
+    }
+  ],
+  "tags": ["标签1", "标签2"]
+}
+```
+logo_url支持地路径或远程URL
+
+### 贡献
+欢迎通过 Pull Request 添加新的社团信息或改进功能：
+
+1. Fork 本仓库
+2. 创建分支
+3. 提交更改
+4. 推送到分支
+5. 创建 Pull Request
+
 
 ### 本地运行
 
@@ -35,32 +72,6 @@
 3. 建议尺寸：至少 160x160 像素（地图上显示尺寸）
 4. 文件命名示例：`tsinghua-game-club.png`
 
-### 添加社团数据
-
-编辑 `data/clubs.json` 文件，添加新的社团信息，并提交PR：
-
-```json
-{
-  "id": "club-xxx",
-  "name": "社团名称",
-  "school": "学校名称",
-  "city": "城市",
-  "province": "省份",
-  "latitude": 纬度,
-  "longitude": 经度,
-  "logo_url": "assets/logos/your-logo.png",
-  "short_description": "简短描述",
-  "long_description": "详细描述",
-  "external_links": [
-    {
-      "type": "website|social|email",
-      "url": "链接地址"
-    }
-  ],
-  "tags": ["标签1", "标签2"]
-}
-```
-logo_url支持地路径或远程URL
 ### 侧边栏操作
 
 - **展开侧边栏**：点击右上角的 ☰ 按钮
@@ -89,15 +100,6 @@ GameDevMap/
    └── clubs.json      # 社团数据
 ```
 
-## 贡献指南
-
-欢迎通过 Pull Request 添加新的社团信息或改进功能：
-
-1. Fork 本仓库
-2. 创建分支
-3. 提交更改
-4. 推送到分支
-5. 创建 Pull Request
 
 ## 许可证
 
