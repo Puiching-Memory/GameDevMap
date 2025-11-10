@@ -5,25 +5,19 @@ let currentProvinceFilter = null; // 当前选中的省份过滤器
 
 const AMAP_KEY = '62f275dfc2b00c300c0ea9842ed315ca';
 
-// 初始化地图
 function initMap() {
     try {
-        // 创建地图实例，默认聚焦中国
         map = new AMap.Map('map', {
             zoom: 5,
             center: [104.1954, 35.8617],
             viewMode: '2D',
             lang: 'zh_cn'
         });
-
-        console.log('高德地图初始化成功');
     } catch (error) {
-        console.error('地图初始化失败:', error);
         alert('地图初始化失败，请检查网络连接。');
     }
 }
 
-// 加载数据
 async function loadData() {
     try {
         const response = await fetch('data/clubs.json');
@@ -31,7 +25,6 @@ async function loadData() {
         displayMarkers();
         createProvinceList();
     } catch (error) {
-        console.error('加载数据失败:', error);
         alert('数据加载失败，请检查 data/clubs.json 文件是否存在');
     }
 }
