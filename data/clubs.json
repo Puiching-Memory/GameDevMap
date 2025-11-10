@@ -17,5 +17,18 @@
       }
     ],
     "tags": ["游戏开发", "Unity", "技术"]
+  },
+  {
+    "id": "club-002",
+    "name": "厦门大学第九艺术游创社",
+    "school": "厦门大学",
+    "city": "厦门",
+    "province": "福建省",
+    "latitude": 24.607377,
+    "longitude": 118.309695,
+    "logo_url": "assets/logos/xmu-game-club.png",
+    "short_description": "厦门大学游戏开发社团",
+    "long_description": "厦大唯一指定游戏开发社团，涵盖三个校区，社团宗旨为缔结震撼人心的艺术品",
+    "tags":["正式社团"]
   }
 ]
