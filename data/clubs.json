@@ -29,6 +29,29 @@
     "logo_url": "assets/logos/xmu-game-club.png",
     "short_description": "厦门大学游戏开发社团",
     "long_description": "厦大唯一指定游戏开发社团，涵盖三个校区，社团宗旨为缔结震撼人心的艺术品",
-    "tags":["正式社团"]
+    "tags": [ "正式社团" ]
+  },
+  {
+    "id": "club-003",
+    "name": "萌屋",
+    "school": "湘潭大学",
+    "city": "湘潭",
+    "province": "湖南省",
+    "latitude": 27.882942,
+    "longitude": 112.863096,
+    "logo_url": "assets/logos/Cutyroom-game-club.png",
+    "short_description": "湘潭大学的游戏开发组织Cutyroom Studio欢迎大家",
+    "long_description": "欢迎了解Cutyroom，我们大致分为程序，策划，美术三个方向，主打unity引擎的游戏开发，热衷于参加各类gamejam，定期举办分享会等活动，有多部游戏现已登录平台,官方的网站正在制作中",
+    "external_links": [
+        {
+            "type": "website",
+            "url": "https://www.taptap.cn/app/726467?os=pc"
+        },
+        {
+            "type": "website",
+            "url": "https://www.gcores.com/games/141972"
+        }
+    ],
+    "tags": [ "正式社团", "游戏开发", "unity", "策划", "2d与3d美术" ]
   }
 ]
