@@ -353,24 +353,12 @@ function createCoordinateText(coordinates) {
 function renderDetail(submission) {
   currentSubmission = submission;
 
-  // 构建坐标文本，添加地理编码验证状态
-  const coordinatesText = createCoordinateText(submission.data?.coordinates);
-  const geocodingVerified = submission.metadata?.geocodingVerified;
-  const geocodingDistance = submission.metadata?.geocodingDistance;
-  
-  let coordinatesDisplay = coordinatesText;
-  if (geocodingVerified === true) {
-    coordinatesDisplay += ' ✓ 已验证';
-  } else if (geocodingVerified === false && geocodingDistance !== null) {
-    coordinatesDisplay += ` ⚠️ 偏离 ${geocodingDistance} 公里`;
-  }
-
   fillList(clubInfoList, [
     ['社团名称', submission.data?.name || '-'],
     ['所属学校', submission.data?.school || '-'],
     ['省份', submission.data?.province || '-'],
     ['城市', submission.data?.city || '-'],
-    ['坐标', coordinatesDisplay],
+    ['坐标', createCoordinateText(submission.data?.coordinates)],
     ['标签', submission.data?.tags?.join(', ') || '无'],
     ['简介', submission.data?.description || '未提供'],
     ['Logo', submission.data?.logo || '未上传'],
@@ -384,8 +372,7 @@ function renderDetail(submission) {
     ['审核人', submission.reviewedBy || '未处理'],
     ['审核时间', submission.reviewedAt ? formatDate(submission.reviewedAt) : '未处理'],
     ['提交 IP', submission.metadata?.ipAddress || '未知'],
-    ['客户端', submission.metadata?.userAgent || '未知'],
-    ['地理编码验证', geocodingVerified ? '✓ 通过' : (geocodingVerified === false ? '✗ 未通过' : '未验证')]
+    ['客户端', submission.metadata?.userAgent || '未知']
   ]);
 
   renderDuplicateInfo(submission);

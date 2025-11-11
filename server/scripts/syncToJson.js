@@ -35,7 +35,7 @@ async function syncToJson() {
       latitude: club.coordinates[1],  // [lng, lat] -> lat
       longitude: club.coordinates[0], // [lng, lat] -> lng
       img_name: club.logo || '',
-      short_description: club.description ? club.description.substring(0, 50) : '',
+      short_description: club.shortDescription || club.description?.substring(0, 50) || '',
       long_description: club.description || '',
       tags: club.tags || [],
       website: club.website || '',

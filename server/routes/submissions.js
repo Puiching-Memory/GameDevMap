@@ -7,7 +7,6 @@ const { validateSubmission } = require('../middleware/validate');
 const { submissionLimiter, apiLimiter } = require('../middleware/rateLimiter');
 const { authenticate } = require('../middleware/auth');
 const syncToJson = require('../scripts/syncToJson');
-const { verifyCoordinates } = require('../utils/geocoding');
 const { findSimilarClubs } = require('../utils/duplicateCheck');
 
 /**
@@ -35,16 +34,9 @@ router.post('/',
         : [];
 
       // 执行增强验证（异步，不阻塞提交）
-      let geocodingResult = { verified: false };
       let duplicateResult = { passed: true, similarClubs: [] };
 
       try {
-        // 地理编码验证
-        if (coordinates.length === 2) {
-          const address = `${req.validatedData.province}${req.validatedData.city || ''}${req.validatedData.school}`;
-          geocodingResult = await verifyCoordinates(address, coordinates, 10);
-        }
-
         // 重复检测
         duplicateResult = await findSimilarClubs(
           req.validatedData.name,
@@ -52,7 +44,7 @@ router.post('/',
           coordinates
         );
       } catch (validationError) {
-        console.warn('Enhanced validation failed:', validationError);
+        console.warn('Duplicate check failed:', validationError);
         // 验证失败不影响提交，继续处理
       }
 
@@ -66,6 +58,7 @@ router.post('/',
           city: req.validatedData.city || '',
           coordinates,
           description: req.validatedData.long_description || req.validatedData.description || '',
+          shortDescription: req.validatedData.short_description || '',
           tags: req.validatedData.tags || [],
           logo: req.validatedData.logo || '',
           website: '',
@@ -74,8 +67,6 @@ router.post('/',
         metadata: {
           ipAddress,
           userAgent,
-          geocodingVerified: geocodingResult.verified || false,
-          geocodingDistance: geocodingResult.distance || null,
           duplicateCheck: {
             passed: duplicateResult.passed,
             similarClubs: duplicateResult.similarClubs || []
@@ -247,6 +238,7 @@ router.put('/:id/approve', authenticate, async (req, res) => {
       city: submission.data.city,
       coordinates,
       description: submission.data.description,
+      shortDescription: submission.data.shortDescription || submission.data.description?.substring(0, 50) || '',
       tags: submission.data.tags,
       logo: submission.data.logo,
       website: submission.data.website,

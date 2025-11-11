@@ -35,6 +35,9 @@ const clubSchema = new mongoose.Schema({
   description: {
     type: String
   },
+  shortDescription: {
+    type: String
+  },
   tags: {
     type: [String],
     default: []

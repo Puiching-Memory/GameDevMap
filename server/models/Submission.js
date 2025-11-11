@@ -69,6 +69,10 @@ const submissionSchema = new mongoose.Schema({
       type: String,
       maxlength: 1000
     },
+    shortDescription: {
+      type: String,
+      maxlength: 200
+    },
     tags: {
       type: [String],
       default: [],

@@ -45,6 +45,7 @@ async function migrateClubs() {
           city: club.city || '',
           coordinates: [club.longitude, club.latitude], // [lng, lat]
           description: club.long_description || club.short_description || '',
+          shortDescription: club.short_description || '',
           tags: club.tags || [],
           logo: club.img_name || '',
           website: club.website || '',
