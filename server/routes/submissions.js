@@ -6,6 +6,9 @@ const Club = require('../models/Club');
 const { validateSubmission } = require('../middleware/validate');
 const { submissionLimiter, apiLimiter } = require('../middleware/rateLimiter');
 const { authenticate } = require('../middleware/auth');
+const syncToJson = require('../scripts/syncToJson');
+const { verifyCoordinates } = require('../utils/geocoding');
+const { findSimilarClubs } = require('../utils/duplicateCheck');
 
 /**
  * POST /api/submissions
@@ -31,6 +34,28 @@ router.post('/',
           ]
         : [];
 
+      // 执行增强验证（异步，不阻塞提交）
+      let geocodingResult = { verified: false };
+      let duplicateResult = { passed: true, similarClubs: [] };
+
+      try {
+        // 地理编码验证
+        if (coordinates.length === 2) {
+          const address = `${req.validatedData.province}${req.validatedData.city || ''}${req.validatedData.school}`;
+          geocodingResult = await verifyCoordinates(address, coordinates, 10);
+        }
+
+        // 重复检测
+        duplicateResult = await findSimilarClubs(
+          req.validatedData.name,
+          req.validatedData.school,
+          coordinates
+        );
+      } catch (validationError) {
+        console.warn('Enhanced validation failed:', validationError);
+        // 验证失败不影响提交，继续处理
+      }
+
       // 创建提交记录
       const submission = new Submission({
         submitterEmail: req.validatedData.submitterEmail,
@@ -49,10 +74,11 @@ router.post('/',
         metadata: {
           ipAddress,
           userAgent,
-          geocodingVerified: false, // 将在 Phase 6 实现
+          geocodingVerified: geocodingResult.verified || false,
+          geocodingDistance: geocodingResult.distance || null,
           duplicateCheck: {
-            passed: true,
-            similarClubs: []
+            passed: duplicateResult.passed,
+            similarClubs: duplicateResult.similarClubs || []
           }
         }
       });
@@ -236,6 +262,11 @@ router.put('/:id/approve', authenticate, async (req, res) => {
     submission.reviewedBy = req.user.username;
     submission.rejectionReason = undefined;
     await submission.save();
+
+    // 自动同步到 clubs.json（异步执行，不阻塞响应）
+    syncToJson().catch(err => {
+      console.error('Failed to sync clubs.json after approval:', err);
+    });
 
     return res.status(200).json({
       success: true,

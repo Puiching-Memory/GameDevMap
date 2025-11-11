@@ -17,11 +17,17 @@ function getResourcePath(path) {
     }
 }
 
+function getApiPath(path) {
+    // API路径始终从根路径开始
+    return path.startsWith('/') ? path : '/' + path;
+}
+
 // 配置：资源路径
 const CONFIG = {
     LOGO_DIR: getResourcePath('/assets/compressedLogos/'),
     FALLBACK_LOGO_DIR: getResourcePath('/assets/logos/'),
-    DATA_PATH: getResourcePath('/data/clubs.json'),
+    DATA_PATH: getApiPath('/api/clubs'), // 使用动态API
+    DATA_PATH_FALLBACK: getResourcePath('/data/clubs.json'), // 静态文件作为备用
     PLACEHOLDER: getResourcePath('/assets/logos/placeholder.png'),
     DEFAULT_ZOOM: 5,
     CENTER: [104.1954, 35.8617],
@@ -63,16 +69,37 @@ function initMap() {
 
 async function loadData() {
     try {
-        const response = await fetch(CONFIG.DATA_PATH);
+        // 首先尝试从API加载
+        let response = await fetch(CONFIG.DATA_PATH);
+        
+        if (!response.ok) {
+            console.warn(`API failed with ${response.status}, trying fallback...`);
+            // 如果API失败，尝试静态文件
+            response = await fetch(CONFIG.DATA_PATH_FALLBACK);
+        }
+        
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        clubsData = await response.json();
+        
+        const data = await response.json();
+        
+        // 处理API响应格式 {success: true, data: [...]}
+        if (data.success && Array.isArray(data.data)) {
+            clubsData = data.data;
+        } else if (Array.isArray(data)) {
+            // 静态JSON格式
+            clubsData = data;
+        } else {
+            throw new Error('Invalid data format');
+        }
+        
+        console.log(`✓ Loaded ${clubsData.length} clubs`);
         displayMarkers();
         createProvinceList();
     } catch (error) {
         console.error('数据加载失败:', error);
-        alert(`数据加载失败：${error.message}\n请检查 ${CONFIG.DATA_PATH} 文件是否存在`);
+        alert(`数据加载失败：${error.message}\n请检查网络连接或联系管理员`);
     }
 }
 

@@ -8,6 +8,7 @@
     "dev": "nodemon server/index.js",
     "seed:admin": "node server/scripts/seedAdmin.js",
     "migrate:clubs": "node server/scripts/migrateClubs.js",
+    "sync:json": "node server/scripts/syncToJson.js",
     "cache:start": "node server/cache-server.js",
     "pre-cache": "node server/pre-cache.js",
     "cache:clear": "curl -X DELETE http://localhost:3000/api/cache/clear",

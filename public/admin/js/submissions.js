@@ -236,6 +236,7 @@ function renderDuplicateInfo(submission) {
   }
 
   duplicateInfo.classList.remove('hidden');
+  
   const listItems = info.similarClubs.map((club) => {
     if (!club) {
       return '<li>未知社团</li>';
@@ -246,13 +247,32 @@ function renderDuplicateInfo(submission) {
     }
 
     const name = club.name || '未知社团';
-    const id = club._id || '未知 ID';
-    return `<li>${name}（ID：${id}）</li>`;
+    const school = club.school || '';
+    const id = club.id || club._id || '未知 ID';
+    const matchType = club.matchType || 'unknown';
+    const confidence = club.confidence ? `${Math.round(club.confidence * 100)}%` : '';
+    const distance = club.distance ? `${club.distance}米` : '';
+    
+    let matchInfo = '';
+    if (matchType === 'exact') {
+      matchInfo = '<strong style="color: #e74c3c;">完全匹配</strong>';
+    } else if (matchType === 'similar') {
+      matchInfo = `相似度: ${confidence}`;
+    } else if (matchType === 'nearby') {
+      matchInfo = `距离: ${distance}`;
+    }
+    
+    return `<li>
+      <strong>${name}</strong> ${school ? `(${school})` : ''}
+      <br><small>ID: ${id} | ${matchInfo}</small>
+    </li>`;
   }).join('');
+
   duplicateInfo.innerHTML = `
-    <strong>可能的重复记录</strong>
-    <p>系统检测到以下类似社团，请在批准前再次核对：</p>
-    <ul>${listItems}</ul>
+    <p style="margin-bottom: 8px; color: #e67e22;">
+      <strong>⚠️ 检测到 ${info.similarClubs.length} 个类似社团，请在批准前再次核对：</strong>
+    </p>
+    <ul style="margin: 0; padding-left: 20px;">${listItems}</ul>
   `;
 }
 
@@ -333,12 +353,24 @@ function createCoordinateText(coordinates) {
 function renderDetail(submission) {
   currentSubmission = submission;
 
+  // 构建坐标文本，添加地理编码验证状态
+  const coordinatesText = createCoordinateText(submission.data?.coordinates);
+  const geocodingVerified = submission.metadata?.geocodingVerified;
+  const geocodingDistance = submission.metadata?.geocodingDistance;
+  
+  let coordinatesDisplay = coordinatesText;
+  if (geocodingVerified === true) {
+    coordinatesDisplay += ' ✓ 已验证';
+  } else if (geocodingVerified === false && geocodingDistance !== null) {
+    coordinatesDisplay += ` ⚠️ 偏离 ${geocodingDistance} 公里`;
+  }
+
   fillList(clubInfoList, [
     ['社团名称', submission.data?.name || '-'],
     ['所属学校', submission.data?.school || '-'],
     ['省份', submission.data?.province || '-'],
     ['城市', submission.data?.city || '-'],
-    ['坐标', createCoordinateText(submission.data?.coordinates)],
+    ['坐标', coordinatesDisplay],
     ['标签', submission.data?.tags?.join(', ') || '无'],
     ['简介', submission.data?.description || '未提供'],
     ['Logo', submission.data?.logo || '未上传'],
@@ -352,7 +384,8 @@ function renderDetail(submission) {
     ['审核人', submission.reviewedBy || '未处理'],
     ['审核时间', submission.reviewedAt ? formatDate(submission.reviewedAt) : '未处理'],
     ['提交 IP', submission.metadata?.ipAddress || '未知'],
-    ['客户端', submission.metadata?.userAgent || '未知']
+    ['客户端', submission.metadata?.userAgent || '未知'],
+    ['地理编码验证', geocodingVerified ? '✓ 通过' : (geocodingVerified === false ? '✗ 未通过' : '未验证')]
   ]);
 
   renderDuplicateInfo(submission);
