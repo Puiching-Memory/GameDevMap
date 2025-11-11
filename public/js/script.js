@@ -39,7 +39,8 @@ function resolveLogoPath(imgName) {
         return CONFIG.PLACEHOLDER;
     }
 
-    return `${CONFIG.LOGO_DIR}${imgName.trim()}`;
+    const path = `${CONFIG.LOGO_DIR}${imgName.trim()}`;
+    return `${path}?t=${Date.now()}`;
 }
 
 function initMap() {
@@ -56,32 +57,6 @@ function initMap() {
     }
 }
 
-async function validateLogos() {
-    const checks = clubsData.map(async (club) => {
-        const name = club.img_name && club.img_name.toString().trim();
-        if (!name) {
-            club.logoUrl = CONFIG.PLACEHOLDER;
-            return;
-        }
-
-        const path = `${CONFIG.LOGO_DIR}${encodeURIComponent(name)}`;
-        try {
-            const res = await fetch(path, { method: 'HEAD' });
-            if (res.ok) {
-                club.logoUrl = `${path}?t=${Date.now()}`;
-            } else {
-                console.warn(`[Logo] 不可访问 (${res.status}): ${name} -> ${path}`);
-                club.logoUrl = CONFIG.PLACEHOLDER;
-            }
-        } catch (err) {
-            console.warn(`[Logo] 请求失败: ${name}`, err.message);
-            club.logoUrl = CONFIG.PLACEHOLDER;
-        }
-    });
-    await Promise.all(checks);
-    console.log('[Logo] 预检完成，不可达文件已回退到占位图');
-}
-
 async function loadData() {
     try {
         const response = await fetch(CONFIG.DATA_PATH);
@@ -89,8 +64,6 @@ async function loadData() {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         clubsData = await response.json();
-        // 校验并缓存每个 logo 的最终 URL
-        await validateLogos();
         displayMarkers();
         createProvinceList();
     } catch (error) {
@@ -121,7 +94,7 @@ function displayMarkers(provinceFilter = null) {
                 }
             }
 
-            const logoUrl = club.logoUrl || CONFIG.PLACEHOLDER;
+            const logoUrl = resolveLogoPath(club.img_name);
 
             // 创建高德地图自定义图标
             const icon = new AMap.Icon({
@@ -160,8 +133,8 @@ function showClubDetails(club) {
     const content = template.content.cloneNode(true);
     
     const logoImg = content.querySelector('.club-logo');
-    logoImg.src = club.logoUrl || CONFIG.PLACEHOLDER;
-    if (club.logoUrl) {
+    logoImg.src = resolveLogoPath(club.img_name);
+    if (club.img_name) {
         logoImg.style.display = 'block';
     } else {
         logoImg.style.display = 'none';
@@ -528,8 +501,8 @@ function showProvinceClubs(province) {
         const item = template.content.cloneNode(true);
         
         const logo = item.querySelector('.province-club-logo');
-        logo.src = club.logoUrl || CONFIG.PLACEHOLDER;
-        if (club.logoUrl) {
+        logo.src = resolveLogoPath(club.img_name);
+        if (club.img_name) {
             logo.style.display = 'block';
         } else {
             logo.style.display = 'none';
