@@ -324,9 +324,12 @@ router.put('/:id/approve', authenticate, async (req, res) => {
     submission.rejectionReason = undefined;
     await submission.save();
 
+    console.log(`✅ Approved submission ${id}, created club ${club._id}`);
+
     // 自动同步到 clubs.json（异步执行，不阻塞响应）
     syncToJson().catch(err => {
-      console.error('Failed to sync clubs.json after approval:', err);
+      console.error('⚠️  Failed to sync clubs.json after approval:', err);
+      // 不影响主流程，仅记录错误
     });
 
     return res.status(200).json({
@@ -338,7 +341,12 @@ router.put('/:id/approve', authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Approve submission failed:', error);
+    console.error('❌ Approve submission failed:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
     return res.status(500).json({
       success: false,
       error: 'SERVER_ERROR',
