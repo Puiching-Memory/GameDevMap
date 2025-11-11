@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
       latitude: club.coordinates[1],  // [lng, lat] -> lat
       longitude: club.coordinates[0], // [lng, lat] -> lng
       img_name: club.logo || '',
-      short_description: club.shortDescription || club.description?.substring(0, 50) || '',
+      short_description: club.shortDescription || '',
       long_description: club.description || '',
       tags: club.tags || [],
       website: club.website || '',
@@ -76,7 +76,7 @@ router.get('/:id', async (req, res) => {
       latitude: club.coordinates[1],
       longitude: club.coordinates[0],
       img_name: club.logo || '',
-      short_description: club.shortDescription || club.description?.substring(0, 50) || '',
+      short_description: club.shortDescription || '',
       long_description: club.description || '',
       tags: club.tags || [],
       website: club.website || '',

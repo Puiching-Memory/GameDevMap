@@ -8,6 +8,8 @@ const { submissionLimiter, apiLimiter } = require('../middleware/rateLimiter');
 const { authenticate } = require('../middleware/auth');
 const syncToJson = require('../scripts/syncToJson');
 const { findSimilarClubs } = require('../utils/duplicateCheck');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * POST /api/submissions
@@ -46,6 +48,38 @@ router.post('/',
       } catch (validationError) {
         console.warn('Duplicate check failed:', validationError);
         // 验证失败不影响提交，继续处理
+      }
+
+      // 立即写入临时 JSON 
+      try {
+        const pendingDir = path.join(__dirname, '../../data/pending_submissions');
+        if (!fs.existsSync(pendingDir)) {
+          fs.mkdirSync(pendingDir, { recursive: true });
+        }
+
+        const tempObj = {
+          timestamp: new Date().toISOString(),
+          ipAddress,
+          userAgent,
+          duplicateCheck: duplicateResult,
+          submission: {
+            submitterEmail: req.validatedData.submitterEmail,
+            data: req.validatedData,
+            // logo is expected to be the frontend-uploaded path (e.g. /assets/submissions/filename)
+            logo: req.validatedData.logo || ''
+          }
+        };
+
+        const tempFilename = `${Date.now()}_${Math.random().toString(36).substring(2,10)}.json`;
+        const tempPath = path.join(pendingDir, tempFilename);
+        try {
+          fs.writeFileSync(tempPath, JSON.stringify(tempObj, null, 2), { encoding: 'utf8' });
+          console.info('Wrote pending submission JSON to', tempPath);
+        } catch (writeErr) {
+          console.warn('Failed to write pending submission JSON:', writeErr);
+        }
+      } catch (errPending) {
+        console.warn('Unable to create pending_submissions directory or write file:', errPending);
       }
 
       // 创建提交记录
@@ -87,6 +121,23 @@ router.post('/',
       });
     } catch (error) {
       console.error('Submission error:', error);
+      
+      // 记录失败的提交数据以便恢复
+      console.error('Failed submission data:', JSON.stringify({
+        timestamp: new Date().toISOString(),
+        submitterEmail: req.validatedData?.submitterEmail,
+        logo: req.validatedData?.logo,
+        data: {
+          name: req.validatedData?.name,
+          school: req.validatedData?.school,
+          province: req.validatedData?.province,
+          city: req.validatedData?.city,
+          description: req.validatedData?.long_description || req.validatedData?.description,
+          shortDescription: req.validatedData?.short_description,
+          tags: req.validatedData?.tags,
+          coordinates: req.validatedData?.coordinates
+        }
+      }, null, 2));
       
       // 处理数据库错误
       if (error.name === 'ValidationError') {
@@ -238,7 +289,7 @@ router.put('/:id/approve', authenticate, async (req, res) => {
       city: submission.data.city,
       coordinates,
       description: submission.data.description,
-      shortDescription: submission.data.shortDescription || submission.data.description?.substring(0, 50) || '',
+      shortDescription: submission.data.shortDescription || '',
       tags: submission.data.tags,
       logo: submission.data.logo,
       website: submission.data.website,

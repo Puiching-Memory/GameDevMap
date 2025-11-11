@@ -2,8 +2,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// 确保上传目录存在
-const uploadDir = path.join(__dirname, '../../public/assets/submissions');
+// 存放提交上传文件的目录
+const uploadDir = path.join(__dirname, '../../data/submissions');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -18,9 +18,18 @@ const storage = multer.diskStorage({
     const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const randomId = Math.random().toString(36).substring(2, 10);
     const ext = path.extname(file.originalname);
-    const basename = path.basename(file.originalname, ext)
+    
+    // 清理文件名: 保留字母、数字、中文，替换其他字符为下划线
+    let basename = path.basename(file.originalname, ext)
       .replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_') // 清理特殊字符
+      .replace(/_+/g, '_') // 合并连续下划线
+      .replace(/^_|_$/g, '') // 去除首尾下划线
       .substring(0, 50); // 限制长度
+    
+    // 如果清理后为空，使用默认名称
+    if (!basename || basename.length === 0) {
+      basename = 'logo';
+    }
     
     const filename = `${date}_${randomId}_${basename}${ext}`;
     cb(null, filename);

@@ -9,9 +9,6 @@ const connectDB = require('./config/db');
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
-
 // Middleware
 app.use(helmet({
   contentSecurityPolicy: false, // Allow inline scripts for simplicity
@@ -24,6 +21,10 @@ app.use(morgan('dev'));
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public')));
+
+// Serve uploaded submissions (stored outside public) under the same public path
+// This keeps URLs unchanged while moving storage to data/submissions for safety.
+app.use('/assets/submissions', express.static(path.join(__dirname, '../data/submissions')));
 
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -108,12 +109,26 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+// Start server function
+const startServer = async () => {
+  try {
+    // Wait for MongoDB connection before starting server
+    await connectDB();
+    
+    const PORT = process.env.PORT || 3000;
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`📊 Admin panel: http://localhost:${PORT}/admin`);
+      console.log(`🗺️  Map view: http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+};
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Admin panel: http://localhost:${PORT}/admin`);
-  console.log(`Map view: http://localhost:${PORT}`);
-});
+// Start the server
+startServer();
 
 module.exports = app;
