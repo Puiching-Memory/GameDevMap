@@ -85,7 +85,6 @@ async function migrateClubs() {
     console.error('❌ Migration failed:', error);
     process.exit(1);
   } finally {
-    await mongoose.connection.close();
     console.log('\n✅ Migration complete');
   }
 }
