@@ -74,7 +74,7 @@
 
 1. 将社团的Logo图片放在 `public/assets/logos/` 文件夹中
 2. 推荐使用 PNG 格式（透明背景）
-3. 建议尺寸：建议不超过 500KB
+3. 如果您本地有Python环境，可以运行一次scripts/下的compress_images.py进行压缩
 4. 文件命名示例：`tsinghua-game-club.png`
 5. 在 `data/clubs.json` 中添加社团信息时，`img_name` 字段只需填写文件名
 
@@ -102,13 +102,6 @@
 2. **学校政策**：不同学校对社团的宣传政策可能不同，建议咨询学校相关部门了解相关规定
 
 **特别提醒：本项目不对任何因使用本网站信息而产生的后果承担责任。请用户自行判断和承担风险。**
-
-## 技术栈
-
-- **地图库**：Leaflet.js
-- **聚合插件**：Leaflet.markercluster
-- **数据格式**：JSON
-- **部署**：GitHub Pages
 
 ## 项目结构
 
