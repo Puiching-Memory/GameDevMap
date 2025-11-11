@@ -13,7 +13,8 @@ const submissionLimiter = rateLimit({
   standardHeaders: true, // 返回 rate limit 信息在 `RateLimit-*` headers
   legacyHeaders: false, // 禁用 `X-RateLimit-*` headers
   skipSuccessfulRequests: false, // 即使成功也计数
-  skipFailedRequests: false // 失败请求也计数
+  skipFailedRequests: false, // 失败请求也计数
+  validate: { xForwardedForHeader: false } // 禁用 X-Forwarded-For 验证
 });
 
 // 通用 API 限流：每 IP 每 15 分钟最多 100 次请求
@@ -27,7 +28,8 @@ const apiLimiter = rateLimit({
     retryAfter: '15 minutes'
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  validate: { xForwardedForHeader: false } // 禁用 X-Forwarded-For 验证
 });
 
 // 认证限流：每 IP 每 15 分钟最多 5 次登录尝试
@@ -42,7 +44,8 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests: true // 成功的登录不计数
+  skipSuccessfulRequests: true, // 成功的登录不计数
+  validate: { xForwardedForHeader: false } // 禁用 X-Forwarded-For 验证
 });
 
 module.exports = {
