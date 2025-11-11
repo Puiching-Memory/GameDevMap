@@ -68,24 +68,6 @@
 
 3. 访问：`http://localhost:8000`
 
-### 服务器部署
-
-**前置条件：** 需要安装 Nginx
-
-```bash
-# 基础部署（IP 或 localhost）
-sudo ./start-server.sh deploy
-
-# 指定域名部署
-sudo DOMAIN=your-domain.com ./start-server.sh deploy
-
-# 重载配置
-sudo ./start-server.sh reload
-
-# 查看帮助
-./start-server.sh help
-```
-
 ### 使用说明
 
 ### 添加社团Logo
