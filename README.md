@@ -72,10 +72,11 @@
 
 ### 添加社团Logo
 
-1. 将社团的Logo图片放在 `assets/logos/` 文件夹中
+1. 将社团的Logo图片放在 `public/assets/logos/` 文件夹中
 2. 推荐使用 PNG 格式（透明背景）
 3. 建议尺寸：至少 160x160 像素（地图上显示尺寸）
 4. 文件命名示例：`tsinghua-game-club.png`
+5. 在 `data/clubs.json` 中添加社团信息时，`img_name` 字段只需填写文件名
 
 ### 侧边栏操作
 
