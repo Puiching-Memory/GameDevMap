@@ -2,16 +2,31 @@
   "name": "gamedevmap-cache",
   "version": "1.0.0",
   "description": "Map cache server for GameDevMap",
-  "main": "server/cache-server.js",
+  "main": "server/index.js",
   "scripts": {
-    "start": "node server/cache-server.js",
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "seed:admin": "node server/scripts/seedAdmin.js",
+    "migrate:clubs": "node server/scripts/migrateClubs.js",
+    "cache:start": "node server/cache-server.js",
     "pre-cache": "node server/pre-cache.js",
     "cache:clear": "curl -X DELETE http://localhost:3000/api/cache/clear",
     "cache:clear:all": "curl -X DELETE \"http://localhost:3000/api/cache/clear?permanent=true\"",
     "cache:stats": "curl http://localhost:3000/api/cache/stats"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "@sendgrid/mail": "^8.1.6",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.8.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "joi": "^18.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.3",
+    "morgan": "^1.10.1",
     "node-fetch": "^2.6.7"
   },
   "keywords": [
@@ -20,5 +35,8 @@
     "amap"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
 }
