@@ -1,4 +1,5 @@
 import { login, verifyToken, clearSession, authFetch, getStoredUser } from './auth.js';
+import { initClubsManagement } from './clubs.js';
 
 const loginSection = document.getElementById('loginSection');
 const dashboardSection = document.getElementById('dashboard');
@@ -21,6 +22,13 @@ const clubInfoList = document.getElementById('clubInfo');
 const metaInfoList = document.getElementById('metaInfo');
 const duplicateInfo = document.getElementById('duplicateInfo');
 const modalFooter = document.getElementById('modalFooter');
+
+// 标签页元素
+const tabButtons = document.querySelectorAll('.tab-button');
+const tabPanels = {
+  submissions: document.getElementById('submissionsPanel'),
+  clubs: document.getElementById('clubsPanel')
+};
 
 let currentPage = 1;
 let totalPages = 1;
@@ -566,6 +574,34 @@ function attachEventListeners() {
     stopAutoRefresh();
     showLogin();
     setListStatus('', 'success');
+  });
+
+  // 标签页切换
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const targetTab = button.dataset.tab;
+      console.log('Switching to tab:', targetTab);
+      
+      // 更新按钮状态
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+      
+      // 切换面板
+      Object.keys(tabPanels).forEach(key => {
+        if (key === targetTab) {
+          tabPanels[key].classList.add('active');
+        } else {
+          tabPanels[key].classList.remove('active');
+        }
+      });
+
+      // 初始化社团管理面板（首次切换时）
+      if (targetTab === 'clubs' && !window.clubsInitialized) {
+        console.log('Initializing clubs management...');
+        initClubsManagement();
+        window.clubsInitialized = true;
+      }
+    });
   });
 
   statusFilter.addEventListener('change', () => loadSubmissions(1));

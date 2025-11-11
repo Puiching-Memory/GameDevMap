@@ -242,12 +242,20 @@ body {
   color: var(--muted-text);
 }
 
-.toolbar select {
+.toolbar select,
+.toolbar input[type="text"] {
   border-radius: 999px;
   border: 1px solid var(--border-color);
   padding: 8px 14px;
   font-size: 0.95rem;
   background: #fff;
+  transition: border 0.2s ease;
+}
+
+.toolbar select:focus,
+.toolbar input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary);
 }
 
 .table-container {
@@ -313,30 +321,36 @@ tbody tr:hover {
   color: #c0392b;
 }
 
-.table-button {
+.table-button,
+.action-button {
   border: none;
   border-radius: 999px;
   padding: 8px 12px;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s ease;
 }
 
-.table-button--primary {
+.table-button--primary,
+.action-button--primary {
   background: var(--primary);
   color: #fff;
 }
 
-.table-button--primary:hover {
+.table-button--primary:hover,
+.action-button--primary:hover {
   background: var(--primary-hover);
 }
 
-.table-button--danger {
+.table-button--danger,
+.action-button--danger {
   background: var(--danger);
   color: #fff;
 }
 
-.table-button--danger:hover {
+.table-button--danger:hover,
+.action-button--danger:hover {
   background: var(--danger-hover);
 }
 

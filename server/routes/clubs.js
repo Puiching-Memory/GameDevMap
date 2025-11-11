@@ -53,7 +53,9 @@ router.get('/', async (req, res) => {
       contact: club.contact || {},
       shortDescription: club.shortDescription || '',
       description: club.description || '',
-      coordinates: club.coordinates
+      coordinates: club.coordinates,
+      createdAt: club.createdAt,
+      updatedAt: club.updatedAt
     }));
 
     return res.status(200).json({
