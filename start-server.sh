@@ -97,69 +97,67 @@ run_dev() {
 
 # Generate Nginx configuration
 generate_nginx_config() {
-    cat > /tmp/gamedevmap.nginx.conf << 'EOF'
+    local domain="$1"
+    local server_name=""
+    
+    # 如果提供了域名，添加到 server_name；否则使用 _（匹配所有请求）
+    if [ -n "$domain" ] && [ "$domain" != "localhost" ]; then
+        server_name="$domain www.$domain"
+    else
+        server_name="_"
+    fi
+    
+    cat > /tmp/gamedevmap.nginx.conf << EOF
 server {
     listen 80;
-    server_name DOMAIN_PLACEHOLDER www.DOMAIN_PLACEHOLDER;
+    server_name $server_name;
     
-    # Redirect HTTP to HTTPS (optional - remove if SSL not configured)
-    # return 301 https://$server_name$request_uri;
-    
-    root ROOT_PATH_PLACEHOLDER;
+    root $PUBLIC_DIR;
     index index.html index.htm;
     
-    # Access and error logs
     access_log /var/log/gamedevmap/access.log;
     error_log /var/log/gamedevmap/error.log warn;
     
-    # Static file caching
+    # 静态文件缓存
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
         expires 30d;
         add_header Cache-Control "public, immutable";
         access_log off;
     }
     
-    # Main application routing
+    # 主应用路由
     location / {
-        try_files $uri $uri/ /index.html;
+        try_files \$uri \$uri/ /index.html;
         add_header Cache-Control "no-cache, no-store, must-revalidate";
         add_header Pragma "no-cache";
         add_header Expires "0";
     }
     
-    # API routing (if backend exists)
+    # API 代理（可选）
     location /api/ {
         proxy_pass http://127.0.0.1:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
     }
     
-    # Security headers
+    # 安全头
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
-    add_header Referrer-Policy "no-referrer-when-downgrade" always;
     
-    # Deny access to sensitive files
+    # 拒绝访问隐藏文件
     location ~ /\. {
-        deny all;
-        access_log off;
-        log_not_found off;
-    }
-    
-    location ~ ~$ {
         deny all;
         access_log off;
         log_not_found off;
     }
 }
 EOF
-}
 
 # Deploy to production (Nginx)
 deploy() {
@@ -192,11 +190,7 @@ deploy() {
     
     # Generate Nginx configuration
     log_info "Generating Nginx configuration..."
-    generate_nginx_config
-    
-    # Replace placeholders in configuration
-    sed -i "s|DOMAIN_PLACEHOLDER|$DOMAIN|g" /tmp/gamedevmap.nginx.conf
-    sed -i "s|ROOT_PATH_PLACEHOLDER|$PUBLIC_DIR|g" /tmp/gamedevmap.nginx.conf
+    generate_nginx_config "$DOMAIN"
     
     # Copy configuration to Nginx sites-available
     log_info "Installing Nginx configuration..."
@@ -329,24 +323,21 @@ Commands:
     help                Display this help message
 
 Environment Variables:
-    DOMAIN              Domain name for Nginx (default: localhost)
+    DOMAIN              Domain name for Nginx (default: localhost, 使用 IP 也可用)
     PORT                Port for development server (default: 8000)
 
 Examples:
-    # Start development server on default port 8000
+    # 开发模式
     ./start-server.sh dev
     
-    # Deploy to production
+    # 使用 IP 部署（无需域名）
     sudo ./start-server.sh deploy
     
-    # Deploy with custom domain
+    # 使用域名部署
     sudo DOMAIN=example.com ./start-server.sh deploy
     
-    # Reload configuration after changes
+    # 重载配置
     sudo ./start-server.sh reload
-    
-    # Check service status
-    ./start-server.sh status
 
 For more information, see README.md
 

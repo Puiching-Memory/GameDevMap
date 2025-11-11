@@ -53,46 +53,37 @@
    cd GameDevMap
    ```
 
-2. 启动本地服务器：
+2. 启动服务器：
    
    **Linux/Mac:**
    ```bash
-   # 赋予执行权限（首次运行）
    chmod +x start-server.sh
-   
-   # 启动开发服务器
-   ./start-server.sh dev
-   
-   # 查看状态
-   ./start-server.sh status
+   ./start-server.sh dev      # 开发模式
    ```
 
-   **Windows**
+   **Windows:**
    ```bash
-   # 使用 Python
    python -m http.server 8000
-   # 或使用 Node.js
-   npx http-server
    ```
 
-
-3. 在浏览器中打开：
-   ```
-   http://localhost:8000
-   ```
+3. 访问：`http://localhost:8000`
 
 ### 服务器部署
 
-#### 自动部署
+**前置条件：** 需要安装 Nginx
+
 ```bash
-# 一键部署到 Nginx
+# 基础部署（IP 或 localhost）
 sudo ./start-server.sh deploy
+
+# 指定域名部署
+sudo DOMAIN=your-domain.com ./start-server.sh deploy
 
 # 重载配置
 sudo ./start-server.sh reload
 
-# 查看状态
-./start-server.sh status
+# 查看帮助
+./start-server.sh help
 ```
 
 ### 使用说明
