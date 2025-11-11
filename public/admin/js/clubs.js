@@ -41,12 +41,13 @@ async function loadClubs() {
     setClubsListStatus('加载中...', '');
     
     const response = await authFetch('/api/clubs');
+    const result = await response.json();
     
-    if (!response.success) {
-      throw new Error(response.message || '加载失败');
+    if (!response.ok || !result.success) {
+      throw new Error(result?.message || `HTTP ${response.status}: ${response.statusText}`);
     }
 
-    clubsData = response.data || [];
+    clubsData = result.data || [];
     filteredClubs = [...clubsData];
     
     renderClubsTable();
@@ -114,7 +115,8 @@ function filterClubs() {
       club.name.toLowerCase().includes(searchTerm) ||
       club.school.toLowerCase().includes(searchTerm) ||
       club.province.toLowerCase().includes(searchTerm) ||
-      (club.city && club.city.toLowerCase().includes(searchTerm))
+      (club.city && club.city.toLowerCase().includes(searchTerm)) ||
+      (club.tags && club.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
     );
   }
 
@@ -144,9 +146,10 @@ async function handleDeleteClub(e) {
     const response = await authFetch(`/api/clubs/${clubId}`, {
       method: 'DELETE'
     });
+    const result = await response.json();
 
-    if (!response.success) {
-      throw new Error(response.message || '删除失败');
+    if (!response.ok || !result.success) {
+      throw new Error(result?.message || `HTTP ${response.status}: ${response.statusText}`);
     }
 
     setClubsListStatus(`已删除: ${clubName}`, 'success');
@@ -209,10 +212,8 @@ export function initClubsManagement() {
   // 绑定事件
   refreshClubsButton.addEventListener('click', loadClubs);
   
-  let searchTimeout;
   clubSearchInput.addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(filterClubs, 300);
+    filterClubs();
   });
 
   // 初始加载
