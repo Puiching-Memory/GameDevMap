@@ -37,5 +37,6 @@ map-cache/
 specs/
 /.venv
 public/assets/submissions/
-data/pending_submissions
-data/submissions
+/data/pending_submissions
+/data/submissions
+
