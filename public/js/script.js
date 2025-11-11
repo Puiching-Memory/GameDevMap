@@ -5,13 +5,14 @@ let currentProvinceFilter = null; // 当前选中的省份过滤器
 
 const AMAP_KEY = '62f275dfc2b00c300c0ea9842ed315ca';
 
-// 处理资源路径
-function resolveAssetPath(path) {
-    if (!path) return null;
-    if (path.startsWith('assets/')) {
-        return '../' + path;
+// 处理Logo图片路径
+function resolveLogoPath(imgName) {
+    if (!imgName) return '/assets/logos/placeholder.png';
+    // 如果只是文件名，自动拼接完整路径
+    if (!imgName.includes('/')) {
+        return `/assets/logos/${imgName}`;
     }
-    return path;
+    return imgName;
 }
 
 function initMap() {
@@ -60,7 +61,7 @@ function displayMarkers(provinceFilter = null) {
                 }
             }
 
-            const logoUrl = resolveAssetPath(club.logo_url) || resolveAssetPath('assets/logos/placeholder.png');
+            const logoUrl = resolveLogoPath(club.img_name);
 
             // 创建高德地图自定义图标
             const icon = new AMap.Icon({
@@ -99,8 +100,8 @@ function showClubDetails(club) {
     const content = template.content.cloneNode(true);
     
     const logoImg = content.querySelector('.club-logo');
-    if (club.logo_url) {
-        logoImg.src = resolveAssetPath(club.logo_url);
+    logoImg.src = resolveLogoPath(club.img_name);
+    if (club.img_name) {
         logoImg.style.display = 'block';
     } else {
         logoImg.style.display = 'none';
@@ -463,8 +464,9 @@ function showProvinceClubs(province) {
         const item = template.content.cloneNode(true);
         
         const logo = item.querySelector('.province-club-logo');
-        if (club.logo_url) {
-            logo.src = resolveAssetPath(club.logo_url);
+        logo.src = resolveLogoPath(club.img_name);
+        if (club.img_name) {
+            logo.style.display = 'block';
         } else {
             logo.style.display = 'none';
         }
