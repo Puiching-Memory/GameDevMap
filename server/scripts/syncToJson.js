@@ -14,9 +14,13 @@ const Club = require('../models/Club');
 
 async function syncToJson() {
   try {
-    // 连接数据库
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
+    // 检查数据库连接状态（不主动连接）
+    if (mongoose.connection.readyState !== 1) {
+      console.warn('⚠️ MongoDB not connected, attempting to connect...');
+      await mongoose.connect(process.env.MONGODB_URI);
+    }
+
+    console.log('Using existing MongoDB connection');
 
     // 获取所有社团
     const clubs = await Club.find({})
@@ -64,18 +68,25 @@ async function syncToJson() {
     console.log('✅ Successfully synced to clubs.json');
     console.log(`📝 Total clubs: ${formattedClubs.length}`);
 
+    return { success: true, count: formattedClubs.length };
+
   } catch (error) {
     console.error('❌ Sync failed:', error);
-    process.exit(1);
-  } finally {
-    await mongoose.connection.close();
-    console.log('✅ Sync complete');
+    throw error;
   }
 }
 
 // Run sync if called directly
 if (require.main === module) {
-  syncToJson();
+  syncToJson()
+    .then(() => {
+      console.log('✅ Sync complete');
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('❌ Sync failed:', error);
+      process.exit(1);
+    });
 }
 
 module.exports = syncToJson;

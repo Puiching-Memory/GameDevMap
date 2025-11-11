@@ -36,7 +36,7 @@ const CONFIG = {
 
 /**
  * 解析 Logo 图片路径
- * @param {string} imgName - 图片文件名（仅文件名，不含路径）
+ * @param {string} imgName - 图片文件名或完整路径
  * @returns {string} 完整的图片路径
  */
 function resolveLogoPath(imgName) {
@@ -44,8 +44,16 @@ function resolveLogoPath(imgName) {
         return CONFIG.PLACEHOLDER;
     }
 
-    const compressedPath = `${CONFIG.LOGO_DIR}${imgName.trim()}`;
-    const fallbackPath = `${CONFIG.FALLBACK_LOGO_DIR}${imgName.trim()}`;
+    const trimmed = imgName.trim();
+
+    // 如果是完整路径（以 / 开头），直接使用
+    if (trimmed.startsWith('/')) {
+        return getResourcePath(trimmed);
+    }
+
+    // 否则，拼接压缩 logo 目录
+    const compressedPath = `${CONFIG.LOGO_DIR}${trimmed}`;
+    const fallbackPath = `${CONFIG.FALLBACK_LOGO_DIR}${trimmed}`;
 
     // Try to load compressed, fallback to original if needed
     // Since we can't check existence in JS, return compressed path
