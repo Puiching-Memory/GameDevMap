@@ -1,5 +1,20 @@
 [
   {
+    "id": "69136e610f72a898ffbd979a",
+    "name": "测试",
+    "school": "测试2",
+    "city": "深圳市",
+    "province": "广东省",
+    "latitude": 33,
+    "longitude": 33,
+    "img_name": "20251111_bosadwy9_3.JPG",
+    "short_description": "",
+    "long_description": "",
+    "tags": [],
+    "website": "",
+    "contact": {}
+  },
+  {
     "id": "691356ed014c1d4dbbc53f4c",
     "name": "游创工坊",
     "school": "北京联合大学",
@@ -23,19 +38,19 @@
     "id": "6913134a62b484cf99359411",
     "name": "逻辑机械游创社",
     "school": "赣南师范大学科技学院",
-    "city": "赣州市",
+    "city": "赣州",
     "province": "江西省",
-    "latitude": 25.849374,
-    "longitude": 114.931543,
-    "img_name": "/assets/submissions/20251111_egm8bwba________________.png",
-    "short_description": "",
-    "long_description": "不定期组织校内游戏活动，主推计算机设计大赛、其它GameJam活动\n2025年新建社团，公开合作计划在制定中……",
+    "latitude": 25.849345,
+    "longitude": 114.931654,
+    "img_name": "GNKY_LMC.png",
+    "short_description": "促进交流与合作、激发创意与灵感、传播游戏文化",
+    "long_description": "一个专注于游戏领域，面向广大游戏开发者和爱好者的社团组织",
     "tags": [
+      "正式社团",
       "游戏开发",
+      "Unity",
       "竞赛",
-      "程序",
-      "美术",
-      "策划"
+      "Gamejam"
     ],
     "website": "",
     "contact": {}
