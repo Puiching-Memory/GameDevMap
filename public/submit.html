@@ -38,6 +38,131 @@
         <div id="selectedClubInfo" class="selected-club-info" style="display: none;"></div>
       </div>
 
+      <!-- 编辑模式界面 -->
+      <div id="editModeInterface" class="edit-mode-interface" style="display: none;">
+        <!-- Logo显示区域 -->
+        <div class="profile-header">
+          <div class="logo-section">
+            <div class="logo-display">
+              <img id="currentLogo" src="" alt="社团Logo" style="display: none;">
+              <div class="logo-placeholder" id="logoPlaceholder">
+                <span>暂无Logo</span>
+              </div>
+            </div>
+            <button type="button" class="edit-btn" data-field="logo" title="编辑Logo">
+              ✏️
+            </button>
+          </div>
+        </div>
+
+        <!-- 社团信息展示 -->
+        <div class="profile-info">
+          <div class="info-row">
+            <div class="info-label">社团名称</div>
+            <div class="info-value">
+              <span id="displayName">-</span>
+              <button type="button" class="edit-btn" data-field="name" title="编辑名称">
+                ✏️
+              </button>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">所属学校</div>
+            <div class="info-value">
+              <span id="displaySchool">-</span>
+              <button type="button" class="edit-btn" data-field="school" title="编辑学校">
+                ✏️
+              </button>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">所在地区</div>
+            <div class="info-value">
+              <span id="displayLocation">-</span>
+              <button type="button" class="edit-btn" data-field="location" title="编辑地区">
+                ✏️
+              </button>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">坐标信息</div>
+            <div class="info-value">
+              <span id="displayCoordinates">-</span>
+              <button type="button" class="edit-btn" data-field="coordinates" title="编辑坐标">
+                ✏️
+              </button>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">社团简介（短）</div>
+            <div class="info-value">
+              <span id="displayShortDescription">-</span>
+              <button type="button" class="edit-btn" data-field="shortDescription" title="编辑简介">
+                ✏️
+              </button>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">社团简介（长）</div>
+            <div class="info-value">
+              <span id="displayLongDescription">-</span>
+              <button type="button" class="edit-btn" data-field="longDescription" title="编辑详细介绍">
+                ✏️
+              </button>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">标签</div>
+            <div class="info-value">
+              <span id="displayTags">-</span>
+              <button type="button" class="edit-btn" data-field="tags" title="编辑标签">
+                ✏️
+              </button>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">官方网站</div>
+            <div class="info-value">
+              <span id="displayWebsite">-</span>
+              <button type="button" class="edit-btn" data-field="website" title="编辑网站">
+                ✏️
+              </button>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">联系方式</div>
+            <div class="info-value">
+              <span id="displayContact">-</span>
+              <button type="button" class="edit-btn" data-field="contact" title="编辑联系方式">
+                ✏️
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 编辑表单（隐藏） -->
+        <div id="editForm" class="edit-form" style="display: none;">
+          <div class="edit-form-header">
+            <h3 id="editFormTitle">编辑信息</h3>
+            <div class="edit-form-actions">
+              <button type="button" id="saveEdit" class="save-btn">保存</button>
+              <button type="button" id="cancelEdit" class="cancel-btn">取消</button>
+            </div>
+          </div>
+          <div id="editFormContent" class="edit-form-content">
+            <!-- 动态生成编辑表单 -->
+          </div>
+        </div>
+      </div>
+
       <form id="submissionForm" novalidate>
         <div class="form-grid">
           <label class="form-field">
