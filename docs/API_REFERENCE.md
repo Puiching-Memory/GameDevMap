@@ -43,49 +43,6 @@ GameDevMap 是一个全国高校游戏开发社团地图系统，提供社团信
   - [错误处理](#错误处理)
   - [延伸阅读](#延伸阅读)
   - [联系方式](#联系方式)
-    - [POST /api/submissions](#post-apisubmissions-1)
-    - [GET /api/clubs](#get-apiclubs-1)
-    - [GET /api/clubs/:id](#get-apiclubsid-1)
-  - [管理端点](#管理端点)
-    - [GET /api/submissions](#get-apisubmissions-1)
-    - [GET /api/submissions/:id](#get-apisubmissionsid-1)
-    - [PUT /api/submissions/:id/approve](#put-apisubmissionsidapprove-1)
-    - [PUT /api/submissions/:id/reject](#put-apisubmissionsidreject-1)
-  - [数据模型](#数据模型-1)
-    - [Submission (提交)](#submission-提交-1)
-    - [Club (社团)](#club-社团-1)
-    - [AdminUser (管理员)](#adminuser-管理员-1)
-  - [错误处理](#错误处理-1)
-    - [错误响应格式](#错误响应格式)
-    - [常见错误码](#常见错误码)
-  - [提交生命周期](#提交生命周期)
-    - [状态流转图](#状态流转图)
-    - [详细步骤](#详细步骤)
-      - [1. 提交 (Submission)](#1-提交-submission)
-      - [2. 审核 (Review)](#2-审核-review)
-      - [3. 批准 (Approve)](#3-批准-approve)
-      - [4. 同步 (Sync)](#4-同步-sync)
-      - [5. 展示 (Display)](#5-展示-display)
-  - [数据同步机制](#数据同步机制)
-    - [MongoDB ↔ clubs.json 双向同步](#mongodb--clubsjson-双向同步)
-      - [JSON → MongoDB (迁移)](#json--mongodb-迁移)
-      - [MongoDB → JSON (同步)](#mongodb--json-同步)
-  - [容灾与恢复](#容灾与恢复)
-    - [临时JSON (Pending Submissions)](#临时json-pending-submissions)
-    - [备份策略](#备份策略)
-  - [性能优化](#性能优化)
-    - [频率限制 (Rate Limiting)](#频率限制-rate-limiting)
-    - [数据库索引](#数据库索引)
-  - [安全措施](#安全措施)
-    - [输入验证](#输入验证)
-    - [认证与授权](#认证与授权)
-    - [安全头](#安全头)
-    - [日志记录](#日志记录)
-  - [附录](#附录)
-    - [环境变量](#环境变量)
-    - [启动命令](#启动命令)
-    - [数据迁移](#数据迁移)
-  - [联系方式](#联系方式-1)
 
 ---
 
@@ -552,6 +509,3 @@ API 错误响应统一格式：
 ## 联系方式
 
 如有问题，请联系开发团队或查看项目仓库。
-**上传社团 Logo**
-
-**请求**:
