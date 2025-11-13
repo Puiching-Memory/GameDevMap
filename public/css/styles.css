@@ -593,19 +593,6 @@ body {
     display: none !important;
 }
 
-/* 地图上社团Logo的灰色背景和黑色边框 */
-.leaflet-marker-icon,
-.amap-marker-content,
-.amap-marker img,
-#map img {
-    background-color: rgba(128, 128, 128, 0.7) !important;
-    border: 2px solid #000000 !important;
-    border-radius: 6px !important;
-    padding: 3px !important;
-    box-sizing: border-box !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
-}
-
 /* 确保地图容器内的图片都有背景和边框 */
 #map .amap-marker img,
 #map img[src*="compressedLogos"],
