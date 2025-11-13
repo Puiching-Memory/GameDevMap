@@ -126,6 +126,16 @@
               </button>
             </div>
           </div>
+
+          <div class="info-row">
+            <div class="info-label">外部链接</div>
+            <div class="info-value">
+              <span id="displayExternalLinks">-</span>
+              <button type="button" class="edit-btn" data-field="external_links" title="编辑外部链接">
+                ✏️
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- 编辑表单（隐藏） -->
@@ -218,10 +228,10 @@
 
         <fieldset class="form-field links-fieldset">
           <legend>相关链接（可选）</legend>
-          <p class="helper-text">添加社团的网站、社交媒体或其他相关链接。例如：网站、GitHub、微博、抖音、B站、小红书、微信公众号等</p>
+          <p class="helper-text">添加社团的网站、社媒等相关链接。例如：网站、GitHub、微博、QQ/微信、抖音、B站、小红书、微信公众号等</p>
           <div id="linksContainer" class="links-container">
             <div class="link-item">
-              <input type="text" name="linkType" class="link-type-input" placeholder="链接类型 (如: 网站, GitHub, 微博等)">
+              <input type="text" name="linkType" class="link-type-input" placeholder="链接类型">
               <input type="url" name="linkUrl" class="link-url-input" placeholder="输入链接地址或ID">
               <button type="button" class="remove-link-btn" style="display: none;">删除</button>
             </div>
@@ -260,6 +270,6 @@
     <p>感谢您为全国高校游戏开发社团地图贡献力量！</p>
   </footer>
 
-  <script type="module" src="js/submit.js?v1.1.1"></script>
+  <script type="module" src="js/submit.js?v1.1.2"></script>
 </body>
 </html>

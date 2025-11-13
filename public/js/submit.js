@@ -74,6 +74,7 @@ const displayElements = {
   shortDescription: document.getElementById('displayShortDescription'),
   longDescription: document.getElementById('displayLongDescription'),
   tags: document.getElementById('displayTags'),
+  externalLinks: document.getElementById('displayExternalLinks'),
   logo: document.getElementById('currentLogo'),
   logoPlaceholder: document.getElementById('logoPlaceholder')
 };
@@ -605,6 +606,15 @@ function populateEditInterface(club) {
   displayElements.shortDescription.textContent = club.short_description || '-';
   displayElements.longDescription.textContent = club.long_description || '-';
   displayElements.tags.textContent = club.tags && club.tags.length > 0 ? club.tags.join(', ') : '-';
+  
+  // Display external links
+  if (club.external_links && club.external_links.length > 0) {
+    displayElements.externalLinks.textContent = club.external_links
+      .map(link => `${link.type}`)
+      .join(' | ');
+  } else {
+    displayElements.externalLinks.textContent = '-';
+  }
 
   // Populate external links form from club data
   // Clear existing links first
@@ -668,6 +678,71 @@ function showEditForm(field) {
   editFormTitle.textContent = getFieldDisplayName(field);
   editFormContent.innerHTML = generateEditForm(field);
   editForm.style.display = 'block';
+  
+  // 如果是编辑外链，需要加载现有的链接数据
+  if (field === 'external_links') {
+    populateEditLinksForm();
+  }
+}
+
+/**
+ * 为编辑表单加载外链数据
+ */
+function populateEditLinksForm() {
+  const editLinksContainer = document.getElementById('editLinksContainer');
+  if (!editLinksContainer) return;
+  
+  editLinksContainer.innerHTML = '';
+  
+  if (selectedClub && selectedClub.external_links && selectedClub.external_links.length > 0) {
+    selectedClub.external_links.forEach(link => {
+      const linkItem = document.createElement('div');
+      linkItem.className = 'link-item';
+      linkItem.innerHTML = `
+        <input type="text" name="linkType" class="link-type-input" placeholder="链接类型 (例: 官网、微博)" value="${escapeHtmlAttr(link.type || '')}">
+        <input type="url" name="linkUrl" class="link-url-input" placeholder="https://example.com" value="${escapeHtmlAttr(link.url || '')}">
+        <button type="button" class="remove-link-btn">删除</button>
+      `;
+      
+      const removeBtn = linkItem.querySelector('.remove-link-btn');
+      removeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        linkItem.remove();
+        updateRemoveButtonsInContainer(editLinksContainer);
+      });
+      
+      editLinksContainer.appendChild(linkItem);
+    });
+  } else {
+    // 添加一个空的链接项
+    const linkItem = document.createElement('div');
+    linkItem.className = 'link-item';
+    linkItem.innerHTML = `
+      <input type="text" name="linkType" class="link-type-input" placeholder="链接类型 (例: 官网、微博)">
+      <input type="url" name="linkUrl" class="link-url-input" placeholder="https://example.com">
+      <button type="button" class="remove-link-btn">删除</button>
+    `;
+    
+    const removeBtn = linkItem.querySelector('.remove-link-btn');
+    removeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      linkItem.remove();
+      updateRemoveButtonsInContainer(editLinksContainer);
+    });
+    
+    editLinksContainer.appendChild(linkItem);
+  }
+  
+  updateRemoveButtonsInContainer(editLinksContainer);
+  
+  // 绑定"添加链接"按钮
+  const addEditLinkBtn = document.getElementById('addEditLinkBtn');
+  if (addEditLinkBtn) {
+    addEditLinkBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      addLinkToContainer(editLinksContainer);
+    });
+  }
 }
 
 // Get display name for field
