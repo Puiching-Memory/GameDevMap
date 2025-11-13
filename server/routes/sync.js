@@ -87,10 +87,10 @@ router.get('/compare', authenticate, async (req, res) => {
       if (data.db && data.json) {
         if (data.db.id === data.json.id) {
           // ID相同，检查内容是否相同
-          const dbStr = JSON.stringify(data.db);
-          const jsonStr = JSON.stringify(data.json);
+          // 使用 findDifferences 进行深度比较，忽略 _id 字段
+          const differences = findDifferences(data.db, data.json);
           
-          if (dbStr === jsonStr) {
+          if (differences.length === 0) {
             result.identical.push({
               club: data.db,
               source: 'both'
@@ -99,7 +99,7 @@ router.get('/compare', authenticate, async (req, res) => {
             result.different.push({
               db: data.db,
               json: data.json,
-              differences: findDifferences(data.db, data.json)
+              differences: differences
             });
           }
         } else {
