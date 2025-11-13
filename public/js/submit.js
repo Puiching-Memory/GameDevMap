@@ -363,7 +363,7 @@ form.addEventListener('submit', async (event) => {
         short_description: formData.get('short_description') || selectedClub.short_description || '',
         long_description: formData.get('long_description') || selectedClub.long_description || '',
         tags,
-        external_links: links,
+        externalLinks: links,
         submitterEmail: submitterEmail
       };
     } else {
@@ -388,7 +388,7 @@ form.addEventListener('submit', async (event) => {
         short_description: shortDescriptionInput.value.trim(),
         long_description: longDescriptionInput.value.trim(),
         tags,
-        external_links: links,
+        externalLinks: links,
         submitterEmail: document.getElementById('submitterEmail').value.trim()
       };
     }
@@ -646,8 +646,8 @@ function populateEditInterface(club) {
   displayElements.tags.textContent = club.tags && club.tags.length > 0 ? club.tags.join(', ') : '-';
   
   // Display external links
-  if (club.external_links && club.external_links.length > 0) {
-    displayElements.externalLinks.textContent = club.external_links
+  if (club.externalLinks && club.externalLinks.length > 0) {
+    displayElements.externalLinks.textContent = club.externalLinks
       .map(link => `${link.type}`)
       .join(' | ');
   } else {
@@ -659,8 +659,8 @@ function populateEditInterface(club) {
   linksContainer.innerHTML = '';
   
   // Add links from club data
-  if (club.external_links && club.external_links.length > 0) {
-    club.external_links.forEach(link => {
+  if (club.externalLinks && club.externalLinks.length > 0) {
+    club.externalLinks.forEach(link => {
       const linkItem = document.createElement('div');
       linkItem.className = 'link-item';
       linkItem.innerHTML = `
@@ -718,7 +718,7 @@ function showEditForm(field) {
   editForm.style.display = 'block';
   
   // 如果是编辑外链，需要加载现有的链接数据
-  if (field === 'external_links') {
+  if (field === 'externalLinks') {
     populateEditLinksForm();
   }
 }
@@ -732,8 +732,8 @@ function populateEditLinksForm() {
   
   editLinksContainer.innerHTML = '';
   
-  if (selectedClub && selectedClub.external_links && selectedClub.external_links.length > 0) {
-    selectedClub.external_links.forEach(link => {
+  if (selectedClub && selectedClub.externalLinks && selectedClub.externalLinks.length > 0) {
+    selectedClub.externalLinks.forEach(link => {
       const linkItem = document.createElement('div');
       linkItem.className = 'link-item';
       linkItem.innerHTML = `
@@ -793,7 +793,7 @@ function getFieldDisplayName(field) {
     shortDescription: '编辑社团简介（短）',
     longDescription: '编辑社团简介（长）',
     tags: '编辑标签',
-    external_links: '编辑外部链接',
+    externalLinks: '编辑外部链接',
     logo: '编辑社团Logo'
   };
   return names[field] || '编辑信息';
@@ -879,7 +879,7 @@ function generateEditForm(field) {
         </label>
       `;
     
-    case 'external_links':
+    case 'externalLinks':
       // External links are handled via the dynamic form, not inline edit
       return `
         <div class="form-field">
@@ -914,7 +914,7 @@ function getCurrentFieldValue(field) {
     case 'shortDescription': return selectedClub.short_description || '';
     case 'longDescription': return selectedClub.long_description || '';
     case 'tags': return selectedClub.tags && selectedClub.tags.length > 0 ? selectedClub.tags.join(', ') : '';
-    case 'external_links': return selectedClub.external_links || [];
+    case 'externalLinks': return selectedClub.externalLinks || [];
     case 'logo': return selectedClub.img_name || '';
     default: return '';
   }
@@ -1026,7 +1026,7 @@ function getEditedValue(field) {
     case 'tags':
       return document.getElementById('editTags').value.trim();
     
-    case 'external_links':
+    case 'externalLinks':
       // Collect external links from the edit form
       const editLinksContainer = document.getElementById('editLinksContainer');
       if (!editLinksContainer) return [];
@@ -1141,8 +1141,8 @@ function updateFormData(field, value) {
       formData.set('tags', JSON.stringify(tags));
       break;
     
-    case 'external_links':
-      formData.set('external_links', JSON.stringify(value || []));
+    case 'externalLinks':
+      formData.set('externalLinks', JSON.stringify(value || []));
       break;
     
     case 'logo':
@@ -1184,7 +1184,7 @@ function updateDisplayValue(field, value) {
       displayElements.tags.textContent = value || '-';
       break;
     
-    case 'external_links':
+    case 'externalLinks':
       displayElements.externalLinks.textContent = formatExternalLinksDisplay(value) || '-';
       break;
     
@@ -1272,7 +1272,7 @@ confirmEdit.addEventListener('click', async () => {
       long_description: selectedClub.long_description || '',
       tags: selectedClub.tags || [],
       logo: logoPath,
-      external_links: externalLinks
+      externalLinks: externalLinks
     };
 
     // Apply edited fields with correct field name mappings
@@ -1401,3 +1401,4 @@ cancelAllEdits.addEventListener('click', () => {
     showStatus('已取消所有修改', 'success');
   }
 });
+

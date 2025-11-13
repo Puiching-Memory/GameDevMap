@@ -139,7 +139,7 @@ const submissionSchema = Joi.object({
       'string.max': '每个标签最多 20 个字符'
     }),
 
-  external_links: Joi.array()
+  externalLinks: Joi.array()
     .items(Joi.object({
       type: Joi.string()
         .max(50)

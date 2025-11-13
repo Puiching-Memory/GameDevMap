@@ -129,7 +129,7 @@ router.post('/',
           shortDescription: req.validatedData.short_description || '',
           tags: req.validatedData.tags || [],
           logo: req.validatedData.logo || '',
-          external_links: req.validatedData.external_links || []
+          externalLinks: req.validatedData.externalLinks || []
         },
         metadata: {
           ipAddress,
@@ -436,7 +436,7 @@ router.put('/:id/approve', authenticate, async (req, res) => {
         club.shortDescription = submission.data.shortDescription || '';
         club.tags = submission.data.tags;
         club.logo = processedLogoFilename;
-        club.external_links = submission.data.external_links || [];
+        club.externalLinks = submission.data.externalLinks || [];
         club.verifiedBy = req.user.username; // 记录最后审核人
         // updatedAt will be set automatically by the pre-save hook
         
@@ -460,7 +460,7 @@ router.put('/:id/approve', authenticate, async (req, res) => {
         shortDescription: submission.data.shortDescription || '',
         tags: submission.data.tags,
         logo: processedLogoFilename,
-        external_links: submission.data.external_links || [],
+        externalLinks: submission.data.externalLinks || [],
         sourceSubmission: submission._id,
         verifiedBy: req.user.username
       });

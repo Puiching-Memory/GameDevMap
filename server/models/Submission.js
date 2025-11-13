@@ -100,8 +100,9 @@ const submissionSchema = new mongoose.Schema({
       type: String,
       trim: true
     },
-    external_links: {
+    externalLinks: {
       type: [{
+        _id: false,  // 禁用自动添加的 _id
         type: { type: String },
         url: { type: String }
       }],

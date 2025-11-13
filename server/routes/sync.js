@@ -7,18 +7,27 @@ const { authenticate } = require('../middleware/auth');
 const syncToJson = require('../scripts/syncToJson');
 
 /**
- * 格式化 Club 对象为 JSON 导出格式
+ * 格式化 Club 对象为统一的 MongoDB 格式
  * 
- * 此函数用于生成 MongoDB -> JSON 的数据，同时规范化字段名和格式
+ * 统一后的格式（驼峰命名）：
+ * - id, name, school, city, province
+ * - coordinates: [lng, lat]
+ * - imgName, shortDescription, description
+ * - tags, externalLinks (无 _id)
  */
 function formatClub(club) {
   // 处理外部链接，移除 MongoDB 的 _id 字段
-  let external_links = [];
-  if (club.external_links && Array.isArray(club.external_links)) {
-    external_links = club.external_links.map(link => ({
+  let externalLinks = [];
+  if (club.externalLinks && Array.isArray(club.externalLinks)) {
+    externalLinks = club.externalLinks.map(link => ({
       type: link.type,
       url: link.url
-      // 注意：不包含 _id 字段，因为 JSON 格式中不需要
+    }));
+  } else if (club.external_links && Array.isArray(club.external_links)) {
+    // 兼容旧字段名
+    externalLinks = club.external_links.map(link => ({
+      type: link.type,
+      url: link.url
     }));
   }
 
@@ -28,13 +37,12 @@ function formatClub(club) {
     school: club.school,
     city: club.city || '',
     province: club.province,
-    latitude: club.coordinates ? club.coordinates[1] : club.latitude,
-    longitude: club.coordinates ? club.coordinates[0] : club.longitude,
-    img_name: club.logo || club.img_name || '',
-    short_description: club.shortDescription || club.short_description || '',
-    long_description: club.description || club.long_description || '',
+    coordinates: club.coordinates || [0, 0],
+    imgName: club.logo || club.imgName || club.img_name || '',
+    shortDescription: club.shortDescription || club.short_description || '',
+    description: club.description || club.long_description || '',
     tags: club.tags || [],
-    external_links: external_links
+    externalLinks: externalLinks
   };
 }
 

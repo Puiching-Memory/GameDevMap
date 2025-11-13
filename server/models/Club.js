@@ -45,8 +45,9 @@ const clubSchema = new mongoose.Schema({
   logo: {
     type: String
   },
-  external_links: {
+  externalLinks: {
     type: [{
+      _id: false,  // 禁用 Mongoose 自动添加的 _id 字段
       type: { type: String },
       url: { type: String }
     }],
