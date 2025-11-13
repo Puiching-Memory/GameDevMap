@@ -89,8 +89,9 @@ async function syncMerge(clubs, clubsJsonPath) {
   let added = 0;
   let updated = 0;
   let unchanged = 0;
-  let removed = 0;
+  let preserved = 0;
 
+  // Process all clubs from database
   for (const club of clubs) {
     const id = club._id.toString();
     const formattedClub = formatClubForJson(club);
@@ -115,9 +116,12 @@ async function syncMerge(clubs, clubsJsonPath) {
     }
   }
 
+  // Preserve clubs that exist in JSON but not in database
   for (const existing of existingClubs) {
     if (!dbMap.has(existing.id)) {
-      removed++;
+      result.push(existing);
+      preserved++;
+      console.log(`⚠️  Preserved club from JSON (not in DB): ${existing.name} (${existing.school})`);
     }
   }
 
@@ -132,7 +136,7 @@ async function syncMerge(clubs, clubsJsonPath) {
     total: result.length,
     added,
     updated,
-    removed,
+    preserved,
     unchanged
   };
 }
@@ -287,7 +291,12 @@ async function syncToJson(mode = 'replace') {
     console.log(`   📝 Total clubs: ${stats.total}`);
     console.log(`   ✅ Added: ${stats.added}`);
     console.log(`   ↻  Updated: ${stats.updated}`);
-    console.log(`   🗑️  Removed: ${stats.removed}`);
+    if (stats.preserved !== undefined) {
+      console.log(`   � Preserved (JSON only): ${stats.preserved}`);
+    }
+    if (stats.removed !== undefined) {
+      console.log(`   �🗑️  Removed: ${stats.removed}`);
+    }
     console.log(`   ━  Unchanged: ${stats.unchanged}`);
     console.log('='.repeat(60));
 

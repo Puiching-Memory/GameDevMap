@@ -102,14 +102,16 @@ npm run sync:addOnly
 - 保留 JSON 中可能的手动修改字段
 - 更新数据库中存在的记录的标准字段
 - 添加数据库中存在但 JSON 中不存在的新社团
-- 标记数据库中已删除但 JSON 中仍存在的社团
+- **保留** JSON 中存在但数据库中不存在的社团（不删除）
 
 **适用场景**:
 - 开发环境保留手动调整
 - 社区贡献的数据合并
 - 渐进式数据更新
+- 保护 JSON 中的独有数据
 
-**统计输出**: 显示添加、更新、删除、未更改的数量
+**统计输出**: 显示添加、更新、保留、未更改的数量
+
 
 ### 仅更新模式 (update)
 **命令**: `npm run sync:update` 或 `node server/scripts/syncToJson.js update`
@@ -213,6 +215,71 @@ Response: {success: true, data: [...], total: 100}
 ```
 GET /api/clubs/:id
 Response: {success: true, data: {...}}
+```
+
+### 数据同步管理 (需要管理员权限)
+
+#### 对比数据库和JSON文件
+```
+GET /api/sync/compare
+Headers: Authorization: Bearer <token>
+Response: {
+  success: true,
+  data: {
+    stats: {
+      database: { total: 100, unique: 100 },
+      json: { total: 98, unique: 98 },
+      comparison: {
+        identical: 95,    // 完全相同
+        different: 3,     // 存在差异
+        dbOnly: 2,        // 仅在数据库
+        jsonOnly: 0,      // 仅在JSON
+        conflicts: 0      // ID冲突
+      }
+    },
+    details: {
+      identical: [...],
+      different: [...],
+      dbOnly: [...],
+      jsonOnly: [...],
+      conflicts: [...]
+    }
+  }
+}
+```
+
+#### 智能合并
+```
+POST /api/sync/merge
+Headers: Authorization: Bearer <token>
+Response: {
+  success: true,
+  message: "智能合并完成",
+  data: {
+    total: 100,
+    added: 2,
+    updated: 3,
+    preserved: 0,
+    unchanged: 95
+  }
+}
+```
+
+#### 完全替换
+```
+POST /api/sync/replace
+Headers: Authorization: Bearer <token>
+Response: {
+  success: true,
+  message: "完全替换完成",
+  data: {
+    total: 100,
+    added: 100,
+    updated: 0,
+    removed: 0,
+    unchanged: 0
+  }
+}
 ```
 ## 监控和日志
 
