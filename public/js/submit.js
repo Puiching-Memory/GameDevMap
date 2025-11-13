@@ -1086,80 +1086,80 @@ confirmEdit.addEventListener('click', async () => {
     confirmEdit.disabled = true;
     confirmEdit.textContent = '提交中...';
 
-    // Prepare update data
-    const updateData = {};
-    
     // Handle logo upload first if changed
+    let logoPath = selectedClub.img_name || '';
     if (formData.has('logo')) {
       const logoFile = formData.get('logo');
       if (logoFile instanceof File) {
-        const logoPath = await uploadLogo(logoFile);
-        if (logoPath) {
-          updateData.logo = logoPath;
+        const uploadedPath = await uploadLogo(logoFile);
+        if (uploadedPath) {
+          logoPath = uploadedPath;
         }
       }
     }
 
-    // Add other fields
+    // Build submission data with correct field names
+    // Start with the base structure that matches validation schema
+    let submissionData = {
+      submissionType: 'edit',
+      editingClubId: selectedClub.id,
+      submitterEmail: submitterEmail,
+      // Initialize with current selected club data as defaults
+      name: selectedClub.name,
+      school: selectedClub.school,
+      province: selectedClub.province,
+      city: selectedClub.city,
+      coordinates: {
+        latitude: selectedClub.latitude,
+        longitude: selectedClub.longitude
+      },
+      short_description: selectedClub.short_description || '',
+      long_description: selectedClub.long_description || '',
+      tags: selectedClub.tags || [],
+      logo: logoPath,
+      external_links: selectedClub.external_links || []
+    };
+
+    // Apply edited fields with correct field name mappings
     for (const [field, value] of formData) {
       if (field === 'logo') continue; // Already handled above
       
       switch (field) {
         case 'name':
-          updateData.name = value;
+          submissionData.name = value;
           break;
         case 'school':
-          updateData.school = value;
+          submissionData.school = value;
           break;
         case 'location':
           const [city, province] = value.split(', ');
-          updateData.province = province;
-          if (city) updateData.city = city;
+          submissionData.province = province;
+          if (city) submissionData.city = city;
           break;
         case 'coordinates':
           const [lat, lng] = value.split(', ');
-          updateData.latitude = parseFloat(lat);
-          updateData.longitude = parseFloat(lng);
+          submissionData.coordinates = {
+            latitude: parseFloat(lat),
+            longitude: parseFloat(lng)
+          };
           break;
         case 'shortDescription':
-          updateData.shortDescription = value;
+          submissionData.short_description = value;
           break;
         case 'longDescription':
-          updateData.longDescription = value;
+          submissionData.long_description = value;
           break;
         case 'tags':
-          updateData.tags = parseTags(value);
+          submissionData.tags = parseTags(value);
           break;
         case 'website':
-          updateData.website = value;
+          submissionData.website = value;
           break;
         case 'contact':
-          updateData.contact = value;
+          submissionData.contact = value;
           break;
       }
     }
-
-    // Submit update as an edit submission
-    const submissionData = {
-      submissionType: 'edit',
-      editingClubId: selectedClub.id,
-      originalData: {
-        name: selectedClub.name,
-        school: selectedClub.school,
-        province: selectedClub.province,
-        city: selectedClub.city,
-        latitude: selectedClub.latitude,
-        longitude: selectedClub.longitude,
-        short_description: selectedClub.short_description,
-        long_description: selectedClub.long_description,
-        tags: selectedClub.tags,
-        website: selectedClub.website,
-        contact: selectedClub.contact,
-        img_name: selectedClub.img_name
-      },
-      data: updateData,
-      submitterEmail: submitterEmail
-    };
 
     const response = await fetch('/api/submissions', {
       method: 'POST',
