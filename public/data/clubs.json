@@ -33,7 +33,7 @@
     "external_links": []
   },
   {
-    "id": "6915d02e3e8129873ad26b57",
+    "id": "6915ce6811d0e830ac187dd4",
     "name": "游创工坊",
     "school": "北京联合大学",
     "city": "北京",
@@ -41,8 +41,8 @@
     "latitude": 39.5928,
     "longitude": 116.2518,
     "img_name": "youchuang.png",
-    "short_description": "来自联大的初创社团",
-    "long_description": "活动就是没有活动",
+    "short_description": "来自联大的初创社团！",
+    "long_description": "活动就是没有活动！",
     "tags": [
       "正式社团",
       "游戏开发",
@@ -73,7 +73,8 @@
     "external_links": [
       {
         "type": "逻机游创飞书主页",
-        "url": "https://icnxn3e8k996.feishu.cn/wiki/LuIewhxV7iNYspkhgb9cCM5vnIg?from=from_copylink"
+        "url": "https://icnxn3e8k996.feishu.cn/wiki/LuIewhxV7iNYspkhgb9cCM5vnIg?from=from_copylink",
+        "_id": "6915d4f7a33d94ac279ca106"
       }
     ]
   },
@@ -123,7 +124,8 @@
     "external_links": [
       {
         "type": "微光漫摄协会官网",
-        "url": "https://siulight.com"
+        "url": "https://siulight.com",
+        "_id": "6915d4f7a33d94ac279ca10c"
       }
     ]
   },
@@ -150,7 +152,8 @@
     "external_links": [
       {
         "type": "游戏开发协会首页",
-        "url": "https://bqt4a2kph6x.feishu.cn/wiki/GpHpwcLT2iunl2kmFt7cYDbrnhe"
+        "url": "https://bqt4a2kph6x.feishu.cn/wiki/GpHpwcLT2iunl2kmFt7cYDbrnhe",
+        "_id": "6915d4f7a33d94ac279ca112"
       }
     ]
   },
@@ -177,7 +180,8 @@
     "external_links": [
       {
         "type": "知识库/社群联系方式",
-        "url": "https://rcn5t7x1agov.feishu.cn/wiki/O2iZwMmjGiql3skD0khceKx1nRe"
+        "url": "https://rcn5t7x1agov.feishu.cn/wiki/O2iZwMmjGiql3skD0khceKx1nRe",
+        "_id": "6915d4f7a33d94ac279ca117"
       }
     ]
   },
@@ -202,11 +206,13 @@
     "external_links": [
       {
         "type": "《烛光：灵魂边境》",
-        "url": "https://www.taptap.cn/app/726467?os=pc"
+        "url": "https://www.taptap.cn/app/726467?os=pc",
+        "_id": "6915d4f7a33d94ac279ca11d"
       },
       {
         "type": "《新闻学模拟器》",
-        "url": "https://www.gcores.com/games/141972"
+        "url": "https://www.gcores.com/games/141972",
+        "_id": "6915d4f7a33d94ac279ca11e"
       }
     ]
   },
