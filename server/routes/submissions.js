@@ -148,21 +148,42 @@ router.post('/',
         // Fetch original club data for comparison
         try {
           const Club = require('../models/Club');
-          // Try to find by _id (if it's a valid ObjectId) or by matching name+school
           let originalClub = null;
           
+          // Try to find by _id (if it's a valid ObjectId)
           if (mongoose.Types.ObjectId.isValid(req.validatedData.editingClubId)) {
             originalClub = await Club.findById(req.validatedData.editingClubId);
+            
+            if (originalClub) {
+              console.log(`✓ Found original club by ID: ${originalClub.name} (${originalClub.school})`);
+            }
+          }
+          
+          // Fallback: Try to find by name + school if ID search failed
+          if (!originalClub && req.validatedData.name && req.validatedData.school) {
+            console.log(`Trying fallback: searching by name+school...`);
+            originalClub = await Club.findOne({
+              name: req.validatedData.name,
+              school: req.validatedData.school
+            });
+            
+            if (originalClub) {
+              console.log(`✓ Found original club by name+school: ${originalClub.name}, _id: ${originalClub._id}`);
+              // Update editingClubId to the correct MongoDB _id
+              submissionData.editingClubId = originalClub._id.toString();
+            }
           }
           
           if (originalClub) {
             submissionData.originalData = originalClub.toObject();
-            console.log(`Found original club by ID: ${originalClub._id}`);
           } else {
-            console.warn(`Could not find club with ID: ${req.validatedData.editingClubId}`);
+            console.warn(`⚠️  Could not find original club for comparison`);
+            console.warn(`   editingClubId: ${req.validatedData.editingClubId}`);
+            console.warn(`   name: ${req.validatedData.name}`);
+            console.warn(`   school: ${req.validatedData.school}`);
           }
         } catch (err) {
-          console.warn('Could not fetch original club data:', err);
+          console.warn('Error fetching original club data:', err);
         }
       }
 
@@ -378,9 +399,30 @@ router.put('/:id/approve', authenticate, async (req, res) => {
     // 检查是否是编辑提交
     if (submission.submissionType === 'edit' && submission.editingClubId) {
       // 编辑模式：更新现有社团
+      console.log(`📝 Edit mode detected. Looking for club with ID: ${submission.editingClubId}`);
+      
       // Try to find by _id if it's a valid ObjectId
       if (mongoose.Types.ObjectId.isValid(submission.editingClubId)) {
+        console.log(`✓ Valid ObjectId format, searching by _id...`);
         club = await Club.findById(submission.editingClubId);
+        
+        if (club) {
+          console.log(`✓ Found club: ${club.name} (${club.school})`);
+        } else {
+          console.warn(`✗ Club not found in database with _id: ${submission.editingClubId}`);
+          // Try to find by name and school as fallback
+          console.log(`Trying fallback: searching by name and school...`);
+          club = await Club.findOne({
+            name: submission.data.name,
+            school: submission.data.school
+          });
+          
+          if (club) {
+            console.log(`✓ Found club by name+school: ${club.name} (${club.school}), _id: ${club._id}`);
+          }
+        }
+      } else {
+        console.warn(`✗ Invalid ObjectId format: ${submission.editingClubId}`);
       }
       
       if (club) {
@@ -402,7 +444,7 @@ router.put('/:id/approve', authenticate, async (req, res) => {
         isNewClub = false;
         console.log(`✅ Updated existing club ${club.id} from submission ${id}`);
       } else {
-        console.warn(`⚠️  Club ${submission.editingClubId} not found, creating new club instead`);
+        console.warn(`⚠️  Could not find club to update, will create new club instead`);
       }
     }
 
@@ -434,7 +476,8 @@ router.put('/:id/approve', authenticate, async (req, res) => {
     await submission.save();
 
     // 自动同步到 clubs.json（异步执行，不阻塞响应）
-    syncToJson().catch(err => {
+    // 使用智能合并模式，保留 JSON 中的手动修改
+    syncToJson('merge').catch(err => {
       console.error('⚠️  Failed to sync clubs.json after approval:', err);
       // 不影响主流程，仅记录错误
     });
