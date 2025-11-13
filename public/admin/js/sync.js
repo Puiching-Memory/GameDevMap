@@ -6,6 +6,14 @@ checkAuth();
 // 当在 admin index 中时初始化同步功能
 function initSyncModule() {
   console.log('🔄 Initializing Sync Module...');
+
+  // 检查是否有服务不可用消息，如果有则不初始化
+  const serviceMessage = document.getElementById('service-unavailable-message');
+  if (serviceMessage) {
+    console.log('⏳ Service unavailable, skipping sync module initialization');
+    return;
+  }
+
   // 检查必要的 DOM 元素
   const compareBtn = document.getElementById('compareBtn');
   const mergeBtn = document.getElementById('mergeBtn');
@@ -54,7 +62,11 @@ function initSyncModule() {
 
     } catch (error) {
       console.error('Compare error:', error);
-      showMessage(error.message || '对比失败，请重试', 'error');
+      if (error.message === 'SERVICE_UNAVAILABLE') {
+        showMessage('数据库连接暂时不可用，请稍后再试', 'warning');
+      } else {
+        showMessage(error.message || '对比失败，请重试', 'error');
+      }
     } finally {
       compareBtn.disabled = false;
       compareBtn.textContent = '对比数据';
@@ -93,7 +105,11 @@ function initSyncModule() {
 
     } catch (error) {
       console.error('Merge error:', error);
-      showMessage(error.message || '合并失败，请重试', 'error');
+      if (error.message === 'SERVICE_UNAVAILABLE') {
+        showMessage('数据库连接暂时不可用，请稍后再试', 'warning');
+      } else {
+        showMessage(error.message || '合并失败，请重试', 'error');
+      }
     } finally {
       mergeBtn.disabled = false;
       mergeBtn.textContent = '双向合并';
@@ -131,7 +147,11 @@ function initSyncModule() {
 
     } catch (error) {
       console.error('Replace error:', error);
-      showMessage(error.message || '替换失败，请重试', 'error');
+      if (error.message === 'SERVICE_UNAVAILABLE') {
+        showMessage('数据库连接暂时不可用，请稍后再试', 'warning');
+      } else {
+        showMessage(error.message || '替换失败，请重试', 'error');
+      }
     } finally {
       replaceBtn.disabled = false;
       replaceBtn.textContent = '单向替换';

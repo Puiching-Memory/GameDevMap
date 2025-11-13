@@ -38,6 +38,57 @@ function ensureJson(response) {
   return response.json().catch(() => null);
 }
 
+function showServiceUnavailableMessage() {
+  // 创建或更新服务不可用消息
+  let messageDiv = document.getElementById('service-unavailable-message');
+  if (!messageDiv) {
+    messageDiv = document.createElement('div');
+    messageDiv.id = 'service-unavailable-message';
+    messageDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 8px;
+      padding: 15px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      max-width: 400px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+    document.body.appendChild(messageDiv);
+  }
+
+  messageDiv.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="color: #856404; font-size: 18px;">⏳</div>
+      <div>
+        <div style="font-weight: 600; color: #856404; margin-bottom: 4px;">服务暂时不可用</div>
+        <div style="font-size: 14px; color: #856404; line-height: 1.4;">
+          数据库连接暂时不可用，请稍后再试。页面将在连接恢复后自动刷新。
+        </div>
+      </div>
+    </div>
+    <button onclick="this.parentElement.parentElement.remove()" style="
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #856404;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    ">×</button>
+  `;
+
+  // 自动重试认证检查
+  setTimeout(() => {
+    checkAuth();
+  }, 10000); // 10秒后重试
+}
+
 export async function login(username, password) {
   const response = await fetch('/api/auth/login', {
     method: 'POST',
@@ -161,6 +212,14 @@ export async function checkAuth() {
     await verifyToken();
   } catch (error) {
     console.warn('认证检查失败：', error.message);
+
+    // 如果是服务不可用（数据库连接问题），不要重定向，显示等待消息
+    if (error.message === 'SERVICE_UNAVAILABLE') {
+      console.warn('数据库连接暂时不可用，显示等待状态...');
+      showServiceUnavailableMessage();
+      return;
+    }
+
     clearSession();
     window.location.href = '/admin/';
   }

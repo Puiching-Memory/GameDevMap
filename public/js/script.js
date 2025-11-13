@@ -130,19 +130,24 @@ async function loadData() {
     try {
         // 首先尝试从API加载
         let response = await fetch(CONFIG.DATA_PATH);
-        
+
         if (!response.ok) {
-            console.warn(`API failed with ${response.status}, trying fallback...`);
+            // 如果是服务不可用（503），也尝试备用文件
+            if (response.status === 503) {
+                console.warn('API temporarily unavailable (503), trying fallback...');
+            } else {
+                console.warn(`API failed with ${response.status}, trying fallback...`);
+            }
             // 如果API失败，尝试静态文件
             response = await fetch(CONFIG.DATA_PATH_FALLBACK);
         }
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        
+
         const data = await response.json();
-        
+
         // 处理API响应格式 {success: true, data: [...]}
         if (data.success && Array.isArray(data.data)) {
             clubsData = data.data;
@@ -152,13 +157,49 @@ async function loadData() {
         } else {
             throw new Error('Invalid data format');
         }
-        
+
         console.log(`✓ Loaded ${clubsData.length} clubs`);
         displayMarkers();
         createProvinceList();
     } catch (error) {
         console.error('数据加载失败:', error);
-        alert(`数据加载失败：${error.message}\n请检查网络连接或联系管理员`);
+        // 不要显示alert，而是显示一个友好的错误信息
+        showDataLoadError(error.message);
+    }
+}
+
+function showDataLoadError(message) {
+    // 在地图容器中显示错误信息
+    const mapContainer = document.getElementById('map');
+    if (mapContainer) {
+        const errorDiv = document.createElement('div');
+        errorDiv.id = 'data-load-error';
+        errorDiv.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 300px;
+            z-index: 1000;
+        `;
+        errorDiv.innerHTML = `
+            <h3 style="color: #e74c3c; margin: 0 0 10px 0;">数据加载失败</h3>
+            <p style="color: #666; margin: 0 0 15px 0; font-size: 14px;">${message}</p>
+            <button onclick="location.reload()" style="
+                background: #3498db;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+            ">重试</button>
+        `;
+        mapContainer.appendChild(errorDiv);
     }
 }
 

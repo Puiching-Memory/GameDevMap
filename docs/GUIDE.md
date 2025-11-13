@@ -30,6 +30,8 @@ pm2 -v
 # 如果未安装: npm install -g pm2
 
 # 确认 Nginx 安装（宝塔已安装）
+/www/server/nginx/sbin/nginx -v
+# 或
 nginx -v
 ```
 
@@ -357,22 +359,27 @@ server {
 
 ### 5.2 测试 Nginx 配置
 ```bash
-# 测试配置语法
+# 宝塔 Nginx 测试配置
+/www/server/nginx/sbin/nginx -t
+
+# 或使用系统 nginx（如果宝塔路径不可用）
 nginx -t
 
 # 应该输出:
-# nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
-# nginx: configuration file /etc/nginx/nginx.conf test is successful
+# nginx: the configuration file /www/server/nginx/conf/nginx.conf syntax is ok
+# nginx: configuration file /www/server/nginx/conf/nginx.conf test is successful
 ```
 
 ### 5.3 重载 Nginx
 ```bash
-# 方式1: 宝塔面板
+# 方式1: 宝塔面板（推荐）
 # 软件商店 → Nginx → 重载配置
 
-# 方式2: 命令行
-systemctl reload nginx
+# 方式2: 宝塔 Nginx 命令行（如果面板不可用）
+/www/server/nginx/sbin/nginx -s reload
 
+# 方式3: 系统 Nginx（仅当宝塔未安装时）
+systemctl reload nginx
 # 或
 nginx -s reload
 ```
@@ -673,8 +680,8 @@ node server/scripts/migrateClubs.js  # 如果有数据
 
 # 5. 配置 Nginx
 # 通过宝塔面板或手动配置
-nginx -t
-systemctl reload nginx
+/www/server/nginx/sbin/nginx -t
+/www/server/nginx/sbin/nginx -s reload
 
 # 6. 启动服务
 pm2 start ecosystem.config.js
@@ -691,15 +698,15 @@ pm2 logs gamedevmap-api
 # 重启 Node.js
 pm2 restart gamedevmap-api
 
-# 重启 Nginx
-systemctl reload nginx
+# 重启 Nginx（宝塔环境）
+/www/server/nginx/sbin/nginx -s reload
 
 # 重启 MongoDB
 systemctl restart mongodb
 
 # 查看状态
 pm2 list
-systemctl status nginx
+ps aux | grep nginx
 systemctl status mongodb
 ```
 

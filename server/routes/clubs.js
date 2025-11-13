@@ -92,6 +92,16 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Get clubs failed:', error);
+
+    // 检查是否是数据库连接问题
+    if (error.name === 'MongooseError' || error.message.includes('MongoDB') || error.message.includes('ECONNREFUSED')) {
+      return res.status(503).json({
+        success: false,
+        error: 'SERVICE_UNAVAILABLE',
+        message: '数据库连接暂时不可用，请稍后再试'
+      });
+    }
+
     return res.status(500).json({
       success: false,
       error: 'SERVER_ERROR',
