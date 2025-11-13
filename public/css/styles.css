@@ -610,7 +610,7 @@ body {
 #map .amap-marker img,
 #map img[src*="compressedLogos"],
 #map img[src*="logos"] {
-    background-color: rgba(128, 128, 128, 0.7) !important;
+    background-color: rgba(128, 128, 128, 0.5) !important;
     border: 2px solid #000000 !important;
     border-radius: 6px !important;
     padding: 3px !important;
