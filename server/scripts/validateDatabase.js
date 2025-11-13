@@ -53,6 +53,11 @@ function findDifferences(obj1, obj2) {
   const allKeys = new Set([...Object.keys(obj1), ...Object.keys(obj2)]);
   
   for (const key of allKeys) {
+    // 跳过 ID 字段的比较，因为 DB ID 是 MongoDB 生成的 _id，JSON ID 是手动的
+    if (key === 'id' || key === '_id' || key === 'dbId' || key === 'jsonId') {
+      continue;
+    }
+    
     const val1 = obj1[key];
     const val2 = obj2[key];
     
@@ -112,36 +117,37 @@ async function validateDatabase() {
       different: [],
       dbOnly: [],
       jsonOnly: [],
-      conflicts: []
+      conflicts: [] // 保留用于兼容性，但在新版本中不会被填充
     };
 
     // 按名称比对
     for (const [key, data] of nameMap) {
       if (data.db && data.json) {
-        if (data.db.id === data.json.id) {
-          // ID相同，检查内容是否相同
-          const dbStr = JSON.stringify(data.db);
-          const jsonStr = JSON.stringify(data.json);
-          
-          if (dbStr === jsonStr) {
-            result.identical.push({
-              club: data.db,
-              source: 'both'
-            });
-          } else {
-            result.different.push({
-              club: data.db.name,
-              school: data.db.school,
-              differences: findDifferences(data.db, data.json)
-            });
-          }
+        // 注意：DB ID 是 MongoDB 新生成的 _id，JSON ID 是旧的
+        // 所以不应该比较 ID，而是按名称+学校匹配后比较其他字段
+        
+        // 创建用于比较的副本，移除ID字段
+        const dbForComparison = { ...data.db };
+        const jsonForComparison = { ...data.json };
+        delete dbForComparison.id;
+        delete jsonForComparison.id;
+        
+        const dbStr = JSON.stringify(dbForComparison);
+        const jsonStr = JSON.stringify(jsonForComparison);
+        
+        if (dbStr === jsonStr) {
+          result.identical.push({
+            club: data.db,
+            source: 'both',
+            note: `DB ID: ${data.db.id}, JSON ID: ${data.json.id}`
+          });
         } else {
-          result.conflicts.push({
-            name: data.db.name,
+          result.different.push({
+            club: data.db.name,
             school: data.db.school,
             dbId: data.db.id,
             jsonId: data.json.id,
-            reason: 'Same name but different ID'
+            differences: findDifferences(data.db, data.json)
           });
         }
       } else if (data.db && !data.json) {
@@ -191,6 +197,7 @@ async function validateDatabase() {
       console.log(`\n⚠️  Different: ${result.different.length} clubs`);
       result.different.forEach(diff => {
         console.log(`  \n❌ ${diff.club} (${diff.school})`);
+        console.log(`     DB ID: ${diff.dbId}, JSON ID: ${diff.jsonId}`);
         diff.differences.forEach(d => {
           console.log(`     Field: ${d.field}`);
           console.log(`       DB:   ${JSON.stringify(d.database)}`);
@@ -218,6 +225,7 @@ async function validateDatabase() {
       result.conflicts.forEach(conf => {
         console.log(`  - ${conf.name} (${conf.school})`);
         console.log(`    DB ID: ${conf.dbId}, JSON ID: ${conf.jsonId}`);
+        console.log(`    ${conf.reason}`);
       });
     }
 

@@ -201,15 +201,27 @@ function collectLinks() {
 
   linkItems.forEach(item => {
     // 尝试多种选择器以支持不同的标签方式
-    const typeInput = item.querySelector('.link-type-input') || item.querySelector('[name="linkType"]') || item.querySelector('.link-type');
-    const urlInput = item.querySelector('.link-url-input') || item.querySelector('[name="linkUrl"]') || item.querySelector('.link-url');
+    const typeInput = item.querySelector('.link-type-input') || 
+                      item.querySelector('[name="linkType"]') || 
+                      item.querySelector('.link-type');
     
+    const urlInput = item.querySelector('.link-url-input') || 
+                     item.querySelector('[name="linkUrl"]') || 
+                     item.querySelector('.link-url');
+    
+    // 安全检查：确保两个输入都存在且有值
     if (typeInput && urlInput) {
-      const type = typeInput.value.trim();
-      const url = urlInput.value.trim();
+      try {
+        const type = (typeInput.value || '').trim();
+        const url = (urlInput.value || '').trim();
 
-      if (type && url) {
-        links.push({ type, url });
+        // 只有当两个字段都有值时才添加
+        if (type && url) {
+          links.push({ type, url });
+        }
+      } catch (error) {
+        console.warn('链接收集错误:', error, item);
+        // 继续处理其他链接
       }
     }
   });
