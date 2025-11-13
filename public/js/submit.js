@@ -619,9 +619,10 @@ function populateEditInterface(club) {
   formData.set('school', club.school || '');
   formData.set('location', club.city ? `${club.city}, ${club.province}` : club.province || '');
   formData.set('coordinates', club.latitude && club.longitude ? `${club.latitude}, ${club.longitude}` : '');
-  formData.set('shortDescription', club.short_description || '');
-  formData.set('longDescription', club.long_description || '');
-  formData.set('tags', club.tags && club.tags.length > 0 ? club.tags.join(', ') : '');
+  formData.set('short_description', club.short_description || '');
+  formData.set('long_description', club.long_description || '');
+  // Store tags as JSON string for consistency with updateFormData
+  formData.set('tags', JSON.stringify(club.tags && club.tags.length > 0 ? club.tags : []));
   formData.set('logo', club.img_name || '');
 
   // Set logo
@@ -1309,7 +1310,19 @@ confirmEdit.addEventListener('click', async () => {
           submissionData.long_description = value;
           break;
         case 'tags':
-          submissionData.tags = JSON.parse(value);
+          // Handle tags - could be either JSON array string or comma-separated string
+          let tagsArray;
+          try {
+            // Try to parse as JSON first
+            tagsArray = JSON.parse(value);
+            if (!Array.isArray(tagsArray)) {
+              tagsArray = [value];
+            }
+          } catch (e) {
+            // If not JSON, treat as comma-separated string
+            tagsArray = value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+          }
+          submissionData.tags = tagsArray;
           break;
       }
     }
