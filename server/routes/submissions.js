@@ -148,9 +148,18 @@ router.post('/',
         // Fetch original club data for comparison
         try {
           const Club = require('../models/Club');
-          const originalClub = await Club.findOne({ id: req.validatedData.editingClubId });
+          // Try to find by _id (if it's a valid ObjectId) or by matching name+school
+          let originalClub = null;
+          
+          if (mongoose.Types.ObjectId.isValid(req.validatedData.editingClubId)) {
+            originalClub = await Club.findById(req.validatedData.editingClubId);
+          }
+          
           if (originalClub) {
             submissionData.originalData = originalClub.toObject();
+            console.log(`Found original club by ID: ${originalClub._id}`);
+          } else {
+            console.warn(`Could not find club with ID: ${req.validatedData.editingClubId}`);
           }
         } catch (err) {
           console.warn('Could not fetch original club data:', err);
@@ -344,7 +353,14 @@ router.put('/:id/approve', authenticate, async (req, res) => {
 
     // 处理图片：移动到 logos 目录并压缩
     let processedLogoFilename = submission.data.logo;
-    if (submission.data.logo) {
+    
+    // 判断是否需要处理图片
+    // 对于编辑提交，检查图片是否来自新上传（在 submissions 目录）
+    const needsImageProcessing = submission.data.logo && 
+      (submission.submissionType !== 'edit' || 
+       submission.data.logo.startsWith('/assets/submissions/'));
+    
+    if (needsImageProcessing) {
       try {
         processedLogoFilename = await processApprovedImage(submission.data.logo);
         console.log(`Processed logo: ${submission.data.logo} -> ${processedLogoFilename}`);
@@ -352,6 +368,8 @@ router.put('/:id/approve', authenticate, async (req, res) => {
         console.error('⚠️  Image processing failed, using original path:', imageError.message);
         // 继续流程，使用原始路径
       }
+    } else if (submission.data.logo) {
+      console.log(`Skipping image processing for existing logo: ${submission.data.logo}`);
     }
 
     let club;
@@ -360,7 +378,10 @@ router.put('/:id/approve', authenticate, async (req, res) => {
     // 检查是否是编辑提交
     if (submission.submissionType === 'edit' && submission.editingClubId) {
       // 编辑模式：更新现有社团
-      club = await Club.findOne({ id: submission.editingClubId });
+      // Try to find by _id if it's a valid ObjectId
+      if (mongoose.Types.ObjectId.isValid(submission.editingClubId)) {
+        club = await Club.findById(submission.editingClubId);
+      }
       
       if (club) {
         // 更新现有社团数据

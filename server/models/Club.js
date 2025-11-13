@@ -76,6 +76,24 @@ clubSchema.index({ coordinates: '2dsphere' });
 clubSchema.index({ province: 1 });
 clubSchema.index({ name: 'text', school: 'text' });
 
+// Virtual field for `id` (maps to _id)
+clubSchema.virtual('id').get(function() {
+  return this._id.toHexString();
+});
+
+// Ensure virtual fields are serialized
+clubSchema.set('toJSON', {
+  virtuals: true,
+  transform: function(doc, ret) {
+    ret.id = ret._id.toString();
+    return ret;
+  }
+});
+
+clubSchema.set('toObject', {
+  virtuals: true
+});
+
 // Update timestamp on save
 clubSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
