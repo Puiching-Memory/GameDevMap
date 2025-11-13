@@ -316,33 +316,56 @@ form.addEventListener('submit', async (event) => {
     let latitude, longitude, tags, links, payload;
     
     if (currentMode === 'edit') {
-      latitude = parseFloat(formData.get('latitude') || '0');
-      longitude = parseFloat(formData.get('longitude') || '0');
+      // In edit mode, start with original club data and override with edited fields
+      if (!selectedClub) {
+        throw new Error('未选择要编辑的社团');
+      }
+      
+      // Get submitter email from the edit mode email input
+      const submitterEmail = editSubmitterEmail.value.trim();
+      if (!submitterEmail) {
+        throw new Error('请输入提交者邮箱');
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(submitterEmail)) {
+        throw new Error('请输入有效的邮箱地址');
+      }
+      
+      // Get coordinates - use edited values if available, otherwise use original
+      const latStr = formData.get('latitude') || selectedClub.latitude;
+      const lngStr = formData.get('longitude') || selectedClub.longitude;
+      latitude = parseFloat(latStr);
+      longitude = parseFloat(lngStr);
       validateCoordinates(latitude, longitude);
-      tags = JSON.parse(formData.get('tags') || '[]');
-      links = collectLinks(); // Links are still collected from the form
+      
+      // Get tags - use edited values if available, otherwise use original
+      let tagsValue;
+      if (formData.has('tags')) {
+        tagsValue = JSON.parse(formData.get('tags'));
+      } else {
+        tagsValue = selectedClub.tags || [];
+      }
+      tags = tagsValue;
+      
+      // Get external links - collect from form
+      links = collectLinks();
       
       payload = {
         submissionType: currentMode,
-        name: formData.get('name') || '',
-        school: formData.get('school') || '',
-        province: formData.get('province') || '',
-        city: formData.get('city') || '',
+        editingClubId: selectedClub.id,
+        name: formData.get('name') || selectedClub.name || '',
+        school: formData.get('school') || selectedClub.school || '',
+        province: formData.get('province') || selectedClub.province || '',
+        city: formData.get('city') || selectedClub.city || '',
         coordinates: {
           latitude,
           longitude
         },
-        short_description: formData.get('short_description') || '',
-        long_description: formData.get('long_description') || '',
+        short_description: formData.get('short_description') || selectedClub.short_description || '',
+        long_description: formData.get('long_description') || selectedClub.long_description || '',
         tags,
         external_links: links,
-        submitterEmail: document.getElementById('submitterEmail').value.trim()
+        submitterEmail: submitterEmail
       };
-
-      // Add editing club ID if in edit mode
-      if (selectedClub) {
-        payload.editingClubId = selectedClub.id;
-      }
     } else {
       // Original logic for new submissions
       latitude = parseFloat(latitudeInput.value.trim());
@@ -374,8 +397,9 @@ form.addEventListener('submit', async (event) => {
     if (logoFile) {
       const logoPath = await uploadLogo(logoFile);
       payload.logo = logoPath;
-    } else if (currentMode === 'edit' && formData.get('logo')) {
-      payload.logo = formData.get('logo');
+    } else if (currentMode === 'edit') {
+      // In edit mode, preserve the original logo if no new logo is uploaded
+      payload.logo = selectedClub.img_name || formData.get('logo') || '';
     }
 
     const response = await fetch('/api/submissions', {

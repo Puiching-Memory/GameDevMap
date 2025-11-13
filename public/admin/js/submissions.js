@@ -488,8 +488,13 @@ function renderEditComparison(submission) {
   }
 
   // Insert comparison section before duplicate info
-  const parentSection = clubInfoList.closest('.detail-section');
-  parentSection.insertAdjacentElement('afterend', comparisonSection);
+  const duplicateInfoEl = document.getElementById('duplicateInfo');
+  if (duplicateInfoEl) {
+    duplicateInfoEl.insertAdjacentElement('beforebegin', comparisonSection);
+  } else {
+    // Fallback: append to detail body
+    detailBody.appendChild(comparisonSection);
+  }
 }
 
 async function openModal(id) {
