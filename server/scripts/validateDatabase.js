@@ -61,7 +61,11 @@ function findDifferences(obj1, obj2) {
     const val1 = obj1[key];
     const val2 = obj2[key];
     
-    if (JSON.stringify(val1) !== JSON.stringify(val2)) {
+    // 清理对象，移除所有 _id 字段以进行比较
+    const cleanVal1 = removeIds(val1);
+    const cleanVal2 = removeIds(val2);
+    
+    if (JSON.stringify(cleanVal1) !== JSON.stringify(cleanVal2)) {
       differences.push({
         field: key,
         database: val1,
@@ -71,6 +75,28 @@ function findDifferences(obj1, obj2) {
   }
   
   return differences;
+}
+
+/**
+ * 递归移除对象中的所有 _id 字段
+ */
+function removeIds(obj) {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => removeIds(item));
+  }
+  
+  const cleaned = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (key !== '_id') {
+      cleaned[key] = removeIds(value);
+    }
+  }
+  
+  return cleaned;
 }
 
 async function validateDatabase() {
