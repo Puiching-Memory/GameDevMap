@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * 调试脚本：详细显示MongoDB和JSON之间的差异
- * 用法: node debug-diff.js
+ * 用法: node debug-diff-fixed.js
  */
 
 const mongoose = require('mongoose');
@@ -10,6 +10,35 @@ const path = require('path');
 require('dotenv').config();
 
 const Club = require('./server/models/Club');
+
+/**
+ * 格式化 Club 对象为 JSON 导出格式
+ */
+function formatClub(club) {
+  // 处理外部链接，移除 MongoDB 的 _id 字段
+  let external_links = [];
+  if (club.external_links && Array.isArray(club.external_links)) {
+    external_links = club.external_links.map(link => ({
+      type: link.type,
+      url: link.url
+    }));
+  }
+
+  return {
+    id: club._id ? club._id.toString() : club.id,
+    name: club.name,
+    school: club.school,
+    city: club.city || '',
+    province: club.province,
+    latitude: club.coordinates ? club.coordinates[1] : club.latitude,
+    longitude: club.coordinates ? club.coordinates[0] : club.longitude,
+    img_name: club.logo || club.img_name || '',
+    short_description: club.shortDescription || club.short_description || '',
+    long_description: club.description || club.long_description || '',
+    tags: club.tags || [],
+    external_links: external_links
+  };
+}
 
 /**
  * 递归移除对象中的所有 _id 字段
@@ -97,13 +126,16 @@ async function main() {
     });
 
     // 找出不一致的
-    console.log('🔍 Checking for differences...\n');
+    console.log('🔍 Checking for differences (using formatClub for conversion)...\n');
     let foundDiff = false;
 
     for (const [key, data] of nameMap) {
       if (data.db && data.json) {
         if (data.db._id.toString() === data.json.id) {
-          const differences = findDifferences(data.db, data.json);
+          // 先将DB对象转换为JSON格式，然后进行比较
+          const dbFormatted = formatClub(data.db);
+          const differences = findDifferences(dbFormatted, data.json);
+          
           if (differences.length > 0) {
             foundDiff = true;
             console.log(`❌ ${data.db.name} (${data.db.school})`);

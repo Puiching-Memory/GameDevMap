@@ -9,9 +9,19 @@ const syncToJson = require('../scripts/syncToJson');
 /**
  * 格式化 Club 对象为 JSON 导出格式
  * 
- * 此函数用于生成 MongoDB -> JSON 的数据
+ * 此函数用于生成 MongoDB -> JSON 的数据，同时规范化字段名和格式
  */
 function formatClub(club) {
+  // 处理外部链接，移除 MongoDB 的 _id 字段
+  let external_links = [];
+  if (club.external_links && Array.isArray(club.external_links)) {
+    external_links = club.external_links.map(link => ({
+      type: link.type,
+      url: link.url
+      // 注意：不包含 _id 字段，因为 JSON 格式中不需要
+    }));
+  }
+
   return {
     id: club._id ? club._id.toString() : club.id,
     name: club.name,
@@ -24,7 +34,7 @@ function formatClub(club) {
     short_description: club.shortDescription || club.short_description || '',
     long_description: club.description || club.long_description || '',
     tags: club.tags || [],
-    external_links: club.external_links || []
+    external_links: external_links
   };
 }
 
@@ -87,17 +97,18 @@ router.get('/compare', authenticate, async (req, res) => {
       if (data.db && data.json) {
         if (data.db.id === data.json.id) {
           // ID相同，检查内容是否相同
-          // 使用 findDifferences 进行深度比较，忽略 _id 字段
-          const differences = findDifferences(data.db, data.json);
+          // 先将数据库对象转换为JSON格式，然后进行比较
+          const dbFormatted = formatClub(data.db);
+          const differences = findDifferences(dbFormatted, data.json);
           
           if (differences.length === 0) {
             result.identical.push({
-              club: data.db,
+              club: dbFormatted,
               source: 'both'
             });
           } else {
             result.different.push({
-              db: data.db,
+              db: dbFormatted,
               json: data.json,
               differences: differences
             });
