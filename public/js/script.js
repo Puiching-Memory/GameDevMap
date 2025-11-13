@@ -212,7 +212,10 @@ function displayMarkers(provinceFilter = null) {
     markers = [];
 
     clubsData.forEach(club => {
-        if (club.latitude && club.longitude) {
+        // 支持两种坐标格式：coordinates数组 或 latitude/longitude字段
+        const coordinates = club.coordinates || (club.latitude && club.longitude ? [club.longitude, club.latitude] : null);
+        
+        if (coordinates && coordinates.length >= 2) {
             // 如果有省份过滤器，检查是否匹配
             if (provinceFilter && provinceFilter !== 'all') {
                 if (provinceFilter === '其他地区') {
@@ -237,7 +240,7 @@ function displayMarkers(provinceFilter = null) {
 
             // 创建高德地图标记
             const marker = new AMap.Marker({
-                position: [club.coordinates[0], club.coordinates[1]], // 高德地图是[经度,纬度]
+                position: [coordinates[0], coordinates[1]], // 高德地图是[经度,纬度]
                 icon: icon,
                 title: club.name,
                 map: map,
@@ -320,13 +323,17 @@ function showClubDetails(club) {
     h3.textContent = '外部链接';
     linksDiv.appendChild(h3);
     
+    console.log('Club externalLinks:', club.externalLinks);
+    console.log('Club name:', club.name);
+    
     if (club.externalLinks && club.externalLinks.length > 0) {
         // 创建链接容器
         const linksContainer = document.createElement('div');
         linksContainer.className = 'external-links-container';
         
         let hasValidLinks = false;
-        club.externalLinks.forEach(link => {
+        club.externalLinks.forEach((link, index) => {
+            console.log(`Link ${index}:`, link, 'type:', link.type, 'url:', link.url);
             if (link.type && link.url) {
                 hasValidLinks = true;
                 const linkWrapper = document.createElement('div');
@@ -348,6 +355,7 @@ function showClubDetails(club) {
             }
         });
         
+        console.log('hasValidLinks:', hasValidLinks);
         if (hasValidLinks) {
             linksDiv.appendChild(linksContainer);
         } else {
@@ -357,6 +365,7 @@ function showClubDetails(club) {
             linksDiv.appendChild(noLinksMsg);
         }
     } else {
+        console.log('No externalLinks or empty array');
         const noLinksMsg = document.createElement('p');
         noLinksMsg.textContent = '暂无外部链接';
         noLinksMsg.style.cssText = 'color: #999; font-style: italic; margin: 8px 0;';
@@ -365,7 +374,7 @@ function showClubDetails(club) {
     
     // 定位按钮
     const locateBtn = content.querySelector('.locate-btn');
-    locateBtn.onclick = () => locateClub(club.latitude, club.longitude);
+    locateBtn.onclick = () => locateClub(club);
     
     detailsDiv.innerHTML = '';
     detailsDiv.appendChild(content);
@@ -376,11 +385,29 @@ function showClubDetails(club) {
 
 // 定位到社团
 function locateClub(lat, lng) {
-    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-        console.warn('无效的坐标:', { lat, lng });
+    // 支持 locateClub(lat, lng) 或 locateClub(club) 的调用方式
+    let latitude, longitude;
+    
+    if (typeof lat === 'object' && lat !== null && lat.coordinates) {
+        // 如果传入的是club对象
+        const coords = lat.coordinates;
+        longitude = coords[0];
+        latitude = coords[1];
+    } else if (typeof lat === 'object' && lat !== null && (lat.latitude !== undefined)) {
+        // 如果传入的是包含latitude/longitude的对象
+        latitude = lat.latitude;
+        longitude = lat.longitude;
+    } else {
+        // 传入的是直接的坐标值
+        latitude = lat;
+        longitude = lng;
+    }
+    
+    if (!latitude || !longitude || isNaN(latitude) || isNaN(longitude)) {
+        console.warn('无效的坐标:', { latitude, longitude });
         return;
     }
-    map.setZoomAndCenter(CONFIG.DETAIL_ZOOM, [lng, lat]); // 高德地图是[经度,纬度]
+    map.setZoomAndCenter(CONFIG.DETAIL_ZOOM, [longitude, latitude]); // 高德地图是[经度,纬度]
 }
 
 // 搜索功能
@@ -435,7 +462,7 @@ function selectSearchResult(clubId) {
     const club = clubsData.find(c => c.id === clubId);
     if (club) {
         showClubDetails(club);
-        locateClub(club.latitude, club.longitude);
+        locateClub(club);
         document.getElementById('searchInput').value = '';
         document.getElementById('searchResults').innerHTML = '';
     }
@@ -685,7 +712,7 @@ function selectClub(clubId) {
     const club = clubsData.find(c => c.id === clubId);
     if (club) {
         showClubDetails(club);
-        locateClub(club.latitude, club.longitude);
+        locateClub(club);
     }
 }
 

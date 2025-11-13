@@ -25,7 +25,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 // Serve static files from public directory
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../public'), {
+  setHeaders: (res, path) => {
+    // Set cache control headers to allow caching for 30 days (1 month)
+    res.setHeader('Cache-Control', 'public, max-age=2592000'); // 30 days in seconds
+  }
+}));
 
 // Serve uploaded submissions (stored outside public) under the same public path
 // This keeps URLs unchanged while moving storage to data/submissions for safety.
