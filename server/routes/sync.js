@@ -463,13 +463,19 @@ router.post('/merge', authenticate, async (req, res) => {
         // 记录已处理，避免后面重复添加
         processedJsonIds.add(matchedJsonClub.id);
         
-        // 找到匹配的 JSON 记录，更新内容但保留 ID
+        // 找到匹配的 JSON 记录，更新内容
+        // 如果名称+学校相同但ID不同，优先使用数据库的ID
+        const matchedByNameSchool = (matchedJsonClub.id !== id);
         const merged = {
           ...formattedClub,
-          id: matchedJsonClub.id,  // 使用 JSON 原始 ID
+          id: matchedByNameSchool ? id : matchedJsonClub.id,  // 如果是通过名称+学校匹配的，使用数据库ID
           ...matchedJsonClub        // JSON 中的其他信息作为备选
         };
         updatedJsonClubs.push(merged);
+        jsonUpdated++;  // 记录更新操作
+        if (matchedByNameSchool) {
+          console.log(`🔄 ID updated in JSON: ${dbClub.name} (${dbClub.school}) - ${matchedJsonClub.id} → ${id}`);
+        }
       } else {
         // MongoDB 中的这个记录在 JSON 中完全没有对应
         // 只有当 JSON 中确实没有这个名称的记录时，才添加
