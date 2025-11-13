@@ -20,7 +20,8 @@
     "pre-cache": "node server/pre-cache.js",
     "cache:clear": "curl -X DELETE http://localhost:3000/api/cache/clear",
     "cache:clear:all": "curl -X DELETE \"http://localhost:3000/api/cache/clear?permanent=true\"",
-    "cache:stats": "curl http://localhost:3000/api/cache/stats"
+    "cache:stats": "curl http://localhost:3000/api/cache/stats",
+    "validate:db": "node server/scripts/validateDatabase.js"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",
