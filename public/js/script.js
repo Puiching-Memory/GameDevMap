@@ -274,18 +274,20 @@ function showClubDetails(club) {
     
     // 外部链接
     const linksDiv = content.querySelector('.club-links');
+    linksDiv.innerHTML = '';
+    const h3 = document.createElement('h3');
+    h3.textContent = '外部链接';
+    linksDiv.appendChild(h3);
+    
     if (club.external_links && club.external_links.length > 0) {
-        linksDiv.innerHTML = '';
-        const h3 = document.createElement('h3');
-        h3.textContent = '外部链接';
-        linksDiv.appendChild(h3);
-        
         // 创建链接容器
         const linksContainer = document.createElement('div');
         linksContainer.className = 'external-links-container';
         
+        let hasValidLinks = false;
         club.external_links.forEach(link => {
             if (link.type && link.url) {
+                hasValidLinks = true;
                 const linkWrapper = document.createElement('div');
                 linkWrapper.className = 'external-link-wrapper';
                 
@@ -305,9 +307,19 @@ function showClubDetails(club) {
             }
         });
         
-        linksDiv.appendChild(linksContainer);
+        if (hasValidLinks) {
+            linksDiv.appendChild(linksContainer);
+        } else {
+            const noLinksMsg = document.createElement('p');
+            noLinksMsg.textContent = '暂无外部链接';
+            noLinksMsg.style.cssText = 'color: #999; font-style: italic; margin: 8px 0;';
+            linksDiv.appendChild(noLinksMsg);
+        }
     } else {
-        linksDiv.style.display = 'none';
+        const noLinksMsg = document.createElement('p');
+        noLinksMsg.textContent = '暂无外部链接';
+        noLinksMsg.style.cssText = 'color: #999; font-style: italic; margin: 8px 0;';
+        linksDiv.appendChild(noLinksMsg);
     }
     
     // 定位按钮

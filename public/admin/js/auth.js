@@ -91,9 +91,15 @@ export async function verifyToken() {
   const result = await ensureJson(response);
 
   if (!response.ok || !result?.success) {
+    // 如果是服务不可用（数据库连接问题），不要清除session
+    if (response.status === 503 || result?.error === 'SERVICE_UNAVAILABLE') {
+      console.warn('数据库连接暂时不可用，稍后重试...');
+      throw new Error('SERVICE_UNAVAILABLE');
+    }
+
     clearSession();
     let errorMessage = result?.message || '登录状态已失效，请重新登录';
-    
+
     // 根据状态码补充更详细的错误信息
     if (!response.ok) {
       if (response.status === 401) {
@@ -104,7 +110,7 @@ export async function verifyToken() {
         errorMessage = '服务器错误，请稍后再试';
       }
     }
-    
+
     throw new Error(errorMessage);
   }
 

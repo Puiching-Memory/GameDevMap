@@ -6,27 +6,38 @@ const connectDB = async () => {
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      maxPoolSize: 10,
+      minPoolSize: 2,
+      maxIdleTimeMS: 30000,
+      bufferCommands: false,
+      bufferMaxEntries: 0,
+      retryWrites: true,
+      retryReads: true,
     });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
-    
+
     // Handle connection events
     mongoose.connection.on('error', (err) => {
       console.error('MongoDB connection error:', err);
     });
 
     mongoose.connection.on('disconnected', () => {
-      console.warn('[MongoDB]MongoDB disconnected');
-      setTimeout(() => {
-        console.log('Attempting to reconnect to MongoDB...');
-        mongoose.connect(process.env.MONGODB_URI).catch(err => {
-          console.error('Reconnection failed:', err.message);
-        });
-      }, 5000);
+      console.warn('[MongoDB]MongoDB disconnected - will auto-reconnect');
     });
 
     mongoose.connection.on('reconnected', () => {
-      console.log('MongoDB reconnected');
+      console.log('✅ MongoDB reconnected successfully');
+    });
+
+    mongoose.connection.on('reconnectFailed', () => {
+      console.error('❌ MongoDB reconnection failed - will retry in 30 seconds');
+      setTimeout(() => {
+        console.log('🔄 Attempting manual reconnection...');
+        mongoose.connect(process.env.MONGODB_URI).catch(err => {
+          console.error('Manual reconnection failed:', err.message);
+        });
+      }, 30000);
     });
 
     // Graceful shutdown
@@ -37,8 +48,11 @@ const connectDB = async () => {
     });
 
   } catch (error) {
-    console.error('❌ MongoDB connection failed:', error.message);
-    process.exit(1);
+    console.error('❌ MongoDB initial connection failed:', error.message);
+    console.log('🔄 Retrying connection in 5 seconds...');
+    setTimeout(() => {
+      connectDB();
+    }, 5000);
   }
 };
 

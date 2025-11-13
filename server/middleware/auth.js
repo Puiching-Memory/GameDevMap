@@ -78,6 +78,16 @@ function authenticate(req, res, next) {
     next();
   } catch (error) {
     console.warn('JWT 验证失败：', error.message);
+
+    // 如果是数据库连接问题，返回服务不可用而不是未授权
+    if (error.message.includes('MongoDB') || error.name === 'MongooseError') {
+      return res.status(503).json({
+        success: false,
+        error: 'SERVICE_UNAVAILABLE',
+        message: '数据库连接暂时不可用，请稍后再试'
+      });
+    }
+
     return res.status(401).json({
       success: false,
       error: 'UNAUTHORIZED',

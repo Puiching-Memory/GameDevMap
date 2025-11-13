@@ -654,6 +654,39 @@ async function bootstrap() {
     const user = await verifyToken();
     enterDashboard(user);
   } catch (error) {
+    if (error.message === 'SERVICE_UNAVAILABLE') {
+      console.warn('数据库连接问题，5秒后重试...');
+      // 显示一个临时的加载状态
+      const loginSection = document.getElementById('loginSection');
+      const originalContent = loginSection.innerHTML;
+      loginSection.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+          <h2>连接中...</h2>
+          <p>数据库连接暂时不可用，正在重试...</p>
+          <div style="margin: 20px 0;">
+            <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+          </div>
+          <button id="retryLogin" class="secondary-button" style="margin-top: 20px;">手动重试</button>
+        </div>
+        <style>
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        </style>
+      `;
+
+      document.getElementById('retryLogin').addEventListener('click', () => {
+        location.reload();
+      });
+
+      // 5秒后自动重试
+      setTimeout(() => {
+        location.reload();
+      }, 5000);
+      return;
+    }
+
     console.warn('自动登录失败：', error.message);
     clearSession();
     showLogin();
