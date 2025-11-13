@@ -17,6 +17,12 @@ build/
 .DS_Store
 Thumbs.db
 
+# Linux/Unix system files
+.bash_logout
+.bash_profile
+.bashrc
+.profile
+
 # Logs
 *.log
 
