@@ -184,16 +184,24 @@ router.post('/merge', authenticate, async (req, res) => {
       jsonClubs = [];
     }
 
-    // 创建映射表
+    // 创建映射表（注意：merge 后需要重新查询 MongoDB，因为第一步可能已修改数据）
+    const dbClubsAfterFirstStep = await Club.find({}).lean();
     const dbMap = new Map();
-    const jsonMap = new Map();
+    const nameMap = new Map(); // 用于名称+学校匹配
     
-    dbClubs.forEach(club => {
+    dbClubsAfterFirstStep.forEach(club => {
       dbMap.set(club._id.toString(), club);
+      const key = `${club.name}-${club.school}`;
+      nameMap.set(key, club);
     });
+    
+    const jsonMap = new Map();
+    const jsonNameMap = new Map();
     
     jsonClubs.forEach(club => {
       jsonMap.set(club.id, club);
+      const key = `${club.name}-${club.school}`;
+      jsonNameMap.set(key, club);
     });
 
     let dbAdded = 0;
@@ -205,122 +213,150 @@ router.post('/merge', authenticate, async (req, res) => {
     // ========== 第一步：处理 JSON -> MongoDB ==========
     // 将 JSON 中的数据合并到 MongoDB
     for (const jsonClub of jsonClubs) {
-      if (dbMap.has(jsonClub.id)) {
-        // JSON 中的记录在数据库中存在，检查是否需要更新
-        const dbClub = dbMap.get(jsonClub.id);
-        const dbStr = JSON.stringify({
-          name: dbClub.name,
-          school: dbClub.school,
-          city: dbClub.city,
-          province: dbClub.province,
-          coordinates: dbClub.coordinates,
-          description: dbClub.description,
-          shortDescription: dbClub.shortDescription,
-          tags: dbClub.tags || [],
-          website: dbClub.website,
-          contact: dbClub.contact || {}
-        });
-        
-        const jsonStr = JSON.stringify({
-          name: jsonClub.name,
-          school: jsonClub.school,
-          city: jsonClub.city,
-          province: jsonClub.province,
-          coordinates: [jsonClub.longitude, jsonClub.latitude],
-          description: jsonClub.long_description,
-          shortDescription: jsonClub.short_description,
-          tags: jsonClub.tags || [],
-          website: jsonClub.website,
-          contact: jsonClub.contact || {}
-        });
-
-        if (dbStr !== jsonStr) {
-          // 更新数据库中的记录（使用 JSON 中的值）
-          await Club.findByIdAndUpdate(
-            jsonClub.id,
-            {
-              name: jsonClub.name,
-              school: jsonClub.school,
-              city: jsonClub.city,
-              province: jsonClub.province,
-              coordinates: [jsonClub.longitude, jsonClub.latitude],
-              description: jsonClub.long_description,
-              shortDescription: jsonClub.short_description,
-              tags: jsonClub.tags || [],
-              website: jsonClub.website,
-              contact: jsonClub.contact || {}
-            },
-            { new: true }
-          );
-          dbUpdated++;
-        } else {
-          unchanged++;
+      try {
+        // 首先尝试通过 ID 精确匹配
+        let existingClub = null;
+        try {
+          existingClub = await Club.findById(jsonClub.id);
+        } catch (e) {
+          // ID 格式不是有效的 ObjectId，尝试通过名称+学校匹配
+          existingClub = null;
         }
-      } else {
-        // JSON 中的记录在数据库中不存在，添加到数据库
-        await Club.create({
-          _id: jsonClub.id,
-          name: jsonClub.name,
-          school: jsonClub.school,
-          city: jsonClub.city,
-          province: jsonClub.province,
-          coordinates: [jsonClub.longitude, jsonClub.latitude],
-          description: jsonClub.long_description,
-          shortDescription: jsonClub.short_description,
-          tags: jsonClub.tags || [],
-          website: jsonClub.website,
-          contact: jsonClub.contact || {},
-          logo: jsonClub.img_name || ''
-        });
-        dbAdded++;
+
+        // 如果 ID 匹配失败，尝试通过名称+学校匹配
+        if (!existingClub) {
+          existingClub = await Club.findOne({
+            name: jsonClub.name,
+            school: jsonClub.school
+          });
+        }
+
+        if (existingClub) {
+          // 检查是否需要更新
+          const dbStr = JSON.stringify({
+            name: existingClub.name,
+            school: existingClub.school,
+            city: existingClub.city,
+            province: existingClub.province,
+            coordinates: existingClub.coordinates,
+            description: existingClub.description,
+            shortDescription: existingClub.shortDescription,
+            tags: existingClub.tags || [],
+            website: existingClub.website,
+            contact: existingClub.contact || {}
+          });
+          
+          const jsonStr = JSON.stringify({
+            name: jsonClub.name,
+            school: jsonClub.school,
+            city: jsonClub.city,
+            province: jsonClub.province,
+            coordinates: [jsonClub.longitude, jsonClub.latitude],
+            description: jsonClub.long_description,
+            shortDescription: jsonClub.short_description,
+            tags: jsonClub.tags || [],
+            website: jsonClub.website,
+            contact: jsonClub.contact || {}
+          });
+
+          if (dbStr !== jsonStr) {
+            // 更新数据库中的记录（使用 JSON 中的值）
+            await Club.findByIdAndUpdate(
+              existingClub._id,
+              {
+                name: jsonClub.name,
+                school: jsonClub.school,
+                city: jsonClub.city,
+                province: jsonClub.province,
+                coordinates: [jsonClub.longitude, jsonClub.latitude],
+                description: jsonClub.long_description,
+                shortDescription: jsonClub.short_description,
+                tags: jsonClub.tags || [],
+                website: jsonClub.website,
+                contact: jsonClub.contact || {},
+                logo: jsonClub.img_name || ''
+              },
+              { new: true }
+            );
+            dbUpdated++;
+            console.log(`✏️  Updated in DB: ${jsonClub.name} (${jsonClub.school})`);
+          } else {
+            unchanged++;
+          }
+        } else {
+          // JSON 中的记录在数据库中完全不存在，添加到数据库
+          // 注意：使用 MongoDB 自动生成的 ObjectId，而不是 JSON 中的 ID
+          // 这样可以避免 ID 格式不兼容的问题
+          await Club.create({
+            name: jsonClub.name,
+            school: jsonClub.school,
+            city: jsonClub.city,
+            province: jsonClub.province,
+            coordinates: [jsonClub.longitude, jsonClub.latitude],
+            description: jsonClub.long_description,
+            shortDescription: jsonClub.short_description,
+            tags: jsonClub.tags || [],
+            website: jsonClub.website,
+            contact: jsonClub.contact || {},
+            logo: jsonClub.img_name || ''
+          });
+          dbAdded++;
+          console.log(`✅ Added to DB: ${jsonClub.name} (${jsonClub.school})`);
+        }
+      } catch (error) {
+        console.error(`❌ Error processing JSON club ${jsonClub.name}:`, error.message);
       }
     }
 
     // ========== 第二步：处理 MongoDB -> JSON ==========
     // 将 MongoDB 中的新数据添加到 JSON，并更新现有记录
     const updatedJsonClubs = [];
+    const processedJsonIds = new Set(); // 跟踪已处理的 JSON ID，防止重复
     
-    for (const dbClub of dbClubs) {
+    for (const dbClub of dbClubsAfterFirstStep) {
       const id = dbClub._id.toString();
       const formattedClub = formatClub(dbClub);
+      const nameKey = `${dbClub.name}-${dbClub.school}`;
       
-      if (jsonMap.has(id)) {
-        // 数据库 ID 在 JSON 中存在
-        const existing = jsonMap.get(id);
+      // 1. 先检查是否存在于 JSON 中（通过原始 JSON ID）
+      let matchedJsonClub = null;
+      for (const jsonClub of jsonClubs) {
+        if (jsonClub.id === id) {
+          matchedJsonClub = jsonClub;
+          break;
+        }
+      }
+      
+      // 2. 如果原始 ID 不匹配，尝试通过名称+学校匹配
+      if (!matchedJsonClub) {
+        matchedJsonClub = jsonClubs.find(j => j.name === dbClub.name && j.school === dbClub.school);
+      }
+      
+      if (matchedJsonClub) {
+        // 记录已处理，避免后面重复添加
+        processedJsonIds.add(matchedJsonClub.id);
+        
+        // 找到匹配的 JSON 记录，更新内容但保留 ID
         const merged = {
           ...formattedClub,
-          id: existing.id,  // 使用 JSON 中的原始 ID
-          ...existing
+          id: matchedJsonClub.id,  // 使用 JSON 原始 ID
+          ...matchedJsonClub        // JSON 中的其他信息作为备选
         };
         updatedJsonClubs.push(merged);
       } else {
-        // 数据库 ID 在 JSON 中不存在，尝试通过名称+学校匹配
-        const nameMatch = jsonClubs.find(
-          j => j.name === formattedClub.name && 
-               j.school === formattedClub.school &&
-               !updatedJsonClubs.some(u => u.id === j.id)
-        );
-        
-        if (nameMatch) {
-          // 找到名称匹配的记录，保留原始 ID 并更新内容
-          const merged = {
-            ...formattedClub,
-            id: nameMatch.id,  // 保留原始 ID
-            ...nameMatch
-          };
-          updatedJsonClubs.push(merged);
-        } else {
-          // 完全新增的记录：仅在两边都不存在时才添加
+        // MongoDB 中的这个记录在 JSON 中完全没有对应
+        // 只有当 JSON 中确实没有这个名称的记录时，才添加
+        if (!jsonNameMap.has(nameKey)) {
           updatedJsonClubs.push(formattedClub);
           jsonAdded++;
         }
+        // 否则说明在名称+学校上已被处理过（可能是旧版本），不重复添加
       }
     }
 
-    // 添加 JSON 中独有的记录（在数据库中不存在且未被处理过）
+    // 3. 添加 JSON 中独有的记录（在 MongoDB 中不存在且未被处理过）
     for (const jsonClub of jsonClubs) {
-      const isProcessed = updatedJsonClubs.some(u => u.id === jsonClub.id);
-      if (!isProcessed && !dbMap.has(jsonClub.id)) {
+      if (!processedJsonIds.has(jsonClub.id) && !nameMap.has(`${jsonClub.name}-${jsonClub.school}`)) {
         updatedJsonClubs.push(jsonClub);
       }
     }

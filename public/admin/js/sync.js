@@ -1,23 +1,39 @@
-import { checkAuth, logout, getAuthHeaders } from './auth.js';
+import { checkAuth, logout, authFetch } from './auth.js';
 
 // Check authentication on page load
 checkAuth();
 
 // 当在 admin index 中时初始化同步功能
 function initSyncModule() {
+  console.log('🔄 Initializing Sync Module...');
   // 检查必要的 DOM 元素
   const compareBtn = document.getElementById('compareBtn');
   const mergeBtn = document.getElementById('mergeBtn');
   const replaceBtn = document.getElementById('replaceBtn');
   
   if (!compareBtn || !mergeBtn || !replaceBtn) {
-    console.warn('Sync buttons not found in DOM');
+    console.warn('⚠️  Sync buttons not found in DOM:', {
+      compareBtn: !!compareBtn,
+      mergeBtn: !!mergeBtn,
+      replaceBtn: !!replaceBtn
+    });
     return;
   }
 
   const messageContainer = document.getElementById('messageContainer');
   const statsContainer = document.getElementById('statsContainer');
   const comparisonContainer = document.getElementById('comparisonContainer');
+  
+  if (!messageContainer || !statsContainer || !comparisonContainer) {
+    console.warn('⚠️  Required containers not found:', {
+      messageContainer: !!messageContainer,
+      statsContainer: !!statsContainer,
+      comparisonContainer: !!comparisonContainer
+    });
+    return;
+  }
+  
+  console.log('✅ All required DOM elements found');
 
   // Compare data
   compareBtn.addEventListener('click', async () => {
@@ -26,10 +42,7 @@ function initSyncModule() {
       compareBtn.textContent = '对比中...';
       clearMessage();
 
-      const response = await fetch('/api/sync/compare', {
-        headers: getAuthHeaders()
-      });
-
+      const response = await authFetch('/api/sync/compare');
       const result = await response.json();
 
       if (!response.ok || !result.success) {
@@ -59,9 +72,8 @@ function initSyncModule() {
       mergeBtn.textContent = '合并中...';
       clearMessage();
 
-      const response = await fetch('/api/sync/merge', {
-        method: 'POST',
-        headers: getAuthHeaders()
+      const response = await authFetch('/api/sync/merge', {
+        method: 'POST'
       });
 
       const result = await response.json();
@@ -99,9 +111,8 @@ function initSyncModule() {
       replaceBtn.textContent = '替换中...';
       clearMessage();
 
-      const response = await fetch('/api/sync/replace', {
-        method: 'POST',
-        headers: getAuthHeaders()
+      const response = await authFetch('/api/sync/replace', {
+        method: 'POST'
       });
 
       const result = await response.json();
@@ -276,4 +287,13 @@ function initSyncModule() {
 }
 
 // 初始化同步模块
-initSyncModule();
+// 确保 DOM 完全加载后再初始化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('📄 DOM fully loaded, initializing Sync Module');
+    initSyncModule();
+  });
+} else {
+  console.log('📄 DOM already loaded, initializing Sync Module');
+  initSyncModule();
+}
