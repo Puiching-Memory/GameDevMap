@@ -62,10 +62,16 @@ async function migrateClubs() {
         };
 
         if (existing) {
-          // 更新现有记录
-          await Club.findByIdAndUpdate(existing._id, clubData);
+          // 更新现有记录 - 使用 $set 操作符确保字段被正确更新
+          await Club.updateOne(
+            { _id: existing._id },
+            { 
+              $set: clubData
+            }
+          );
           updated++;
-          console.log(`  ↻ Updated: ${club.name} (${club.school})`);
+          const linkInfo = clubData.external_links?.length > 0 ? ` (${clubData.external_links.length} links)` : '';
+          console.log(`  ↻ Updated: ${club.name} (${club.school})${linkInfo}`);
         } else {
           // 创建新记录
           const newClub = new Club({
@@ -74,7 +80,8 @@ async function migrateClubs() {
           });
           await newClub.save();
           imported++;
-          console.log(`  ✓ Imported: ${club.name} (${club.school})`);
+          const linkInfo = clubData.external_links?.length > 0 ? ` (${clubData.external_links.length} links)` : '';
+          console.log(`  ✓ Imported: ${club.name} (${club.school})${linkInfo}`);
         }
       } catch (error) {
         console.error(`  ✗ Failed to import ${club.name}:`, error.message);

@@ -567,7 +567,7 @@ Authorization: Bearer <admin_token>
 | `submissionType` | `string` | 必填 | 提交类型：'new'或'edit' |
 | `editingClubId` | `string` | 可选 | 编辑模式下的原社团ID |
 | `status` | `string` | 必填 | 状态：'pending'/'approved'/'rejected' |
-| `data` | `Object` | 必填 | 社团数据对象 |
+| `data` | `Object` | 必填 | 社团数据对象（字段结构与Club模型相同） |
 | `submitterEmail` | `string` | 必填 | 提交者邮箱 |
 | `submittedAt` | `Date` | 自动 | 提交时间 |
 | `reviewedAt` | `Date` | 可选 | 审核时间 |
