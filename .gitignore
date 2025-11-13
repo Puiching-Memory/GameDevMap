@@ -41,3 +41,31 @@ public/assets/submissions/
 /data/submissions
 
 ecosystem.config.js
+
+# Additional security ignores
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.cer
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.tmp
+
+# Server-specific files
+.user.ini
+.htaccess
+
+# API keys and secrets
+*secret*
+*key*
+*token*
+*credential*
