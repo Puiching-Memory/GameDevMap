@@ -131,3 +131,36 @@ export async function authFetch(url, options = {}) {
 
   return response;
 }
+
+export function getAuthHeaders() {
+  const token = getToken();
+  if (!token) {
+    return {};
+  }
+  return {
+    'Authorization': `Bearer ${token}`
+  };
+}
+
+export async function checkAuth() {
+  const storedUser = getStoredUser();
+  if (!storedUser) {
+    // 没有存储的用户信息，重定向到登录页面
+    window.location.href = '/admin/';
+    return;
+  }
+
+  try {
+    // 验证 token 是否仍然有效
+    await verifyToken();
+  } catch (error) {
+    console.warn('认证检查失败：', error.message);
+    clearSession();
+    window.location.href = '/admin/';
+  }
+}
+
+export async function logout() {
+  clearSession();
+  window.location.href = '/admin/';
+}
