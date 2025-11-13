@@ -150,11 +150,12 @@ const submissionSchema = Joi.object({
           'any.required': '链接类型是必填项'
         }),
       url: Joi.string()
-        .uri()
+        .max(300)
         .required()
         .messages({
-          'string.uri': '链接地址必须是有效的 URL',
-          'any.required': '链接地址是必填项'
+          'string.base': '链接内容必须是文本',
+          'string.max': '链接内容最多 300 个字符',
+          'any.required': '链接内容是必填项'
         })
     }))
     .optional()

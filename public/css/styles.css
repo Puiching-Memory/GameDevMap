@@ -410,6 +410,29 @@ body {
     white-space: nowrap;
 }
 
+/* 非URL文本样式 */
+.external-link-text {
+    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%) !important;
+    color: #333 !important;
+    cursor: default !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #ddd !important;
+}
+
+.external-link-text:hover {
+    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    transform: none !important;
+    color: #333 !important;
+}
+
+.external-link-text .link-text {
+    max-width: 200px;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
 /* 旧的 link-item 样式保留用于向后兼容 */
 .link-item {
     display: inline-block;

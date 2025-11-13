@@ -42,17 +42,15 @@ function getLinkTypeIcon(type) {
 }
 
 /**
- * HTML转义函数，防止XSS
+ * 判断字符串是否为有效的URL
  */
-function escapeHtml(text) {
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, m => map[m]);
+function isValidUrl(string) {
+    try {
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
+    }
 }
 
 function getResourcePath(path) {
@@ -323,9 +321,6 @@ function showClubDetails(club) {
     h3.textContent = '外部链接';
     linksDiv.appendChild(h3);
     
-    console.log('Club externalLinks:', club.externalLinks);
-    console.log('Club name:', club.name);
-    
     if (club.externalLinks && club.externalLinks.length > 0) {
         // 创建链接容器
         const linksContainer = document.createElement('div');
@@ -333,29 +328,40 @@ function showClubDetails(club) {
         
         let hasValidLinks = false;
         club.externalLinks.forEach((link, index) => {
-            console.log(`Link ${index}:`, link, 'type:', link.type, 'url:', link.url);
             if (link.type && link.url) {
                 hasValidLinks = true;
                 const linkWrapper = document.createElement('div');
                 linkWrapper.className = 'external-link-wrapper';
                 
-                const a = document.createElement('a');
-                a.href = link.url;
-                a.target = '_blank';
-                a.rel = 'noopener noreferrer'; // 安全考虑
-                a.className = 'external-link-item';
+                if (isValidUrl(link.url)) {
+                    // 如果是URL，显示链接样式
+                    const a = document.createElement('a');
+                    a.href = link.url;
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer'; // 安全考虑
+                    a.className = 'external-link-item';
+                    
+                    // 根据类型添加不同的图标或样式
+                    const icon = getLinkTypeIcon(link.type);
+                    a.innerHTML = `<span class="link-icon">${icon}</span><span class="link-text">${escapeHtml(link.type)}</span>`;
+                    a.title = link.url;
+                    
+                    linkWrapper.appendChild(a);
+                } else {
+                    // 如果不是URL，显示文本样式
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'external-link-item external-link-text';
+                    
+                    const icon = getLinkTypeIcon(link.type);
+                    textDiv.innerHTML = `<span class="link-icon">${icon}</span><span class="link-text">${escapeHtml(link.type)}: ${escapeHtml(link.url)}</span>`;
+                    
+                    linkWrapper.appendChild(textDiv);
+                }
                 
-                // 根据类型添加不同的图标或样式
-                const icon = getLinkTypeIcon(link.type);
-                a.innerHTML = `<span class="link-icon">${icon}</span><span class="link-text">${escapeHtml(link.type)}</span>`;
-                a.title = link.url;
-                
-                linkWrapper.appendChild(a);
                 linksContainer.appendChild(linkWrapper);
             }
         });
         
-        console.log('hasValidLinks:', hasValidLinks);
         if (hasValidLinks) {
             linksDiv.appendChild(linksContainer);
         } else {
@@ -365,7 +371,6 @@ function showClubDetails(club) {
             linksDiv.appendChild(noLinksMsg);
         }
     } else {
-        console.log('No externalLinks or empty array');
         const noLinksMsg = document.createElement('p');
         noLinksMsg.textContent = '暂无外部链接';
         noLinksMsg.style.cssText = 'color: #999; font-style: italic; margin: 8px 0;';
