@@ -59,8 +59,6 @@ const displayElements = {
   shortDescription: document.getElementById('displayShortDescription'),
   longDescription: document.getElementById('displayLongDescription'),
   tags: document.getElementById('displayTags'),
-  website: document.getElementById('displayWebsite'),
-  contact: document.getElementById('displayContact'),
   logo: document.getElementById('currentLogo'),
   logoPlaceholder: document.getElementById('logoPlaceholder')
 };
@@ -177,29 +175,6 @@ async function uploadLogo(file) {
   }
 
   return result.data.path;
-}
-
-/**
- * Collect contact data object, removing empty values.
- */
-function collectContact() {
-  const contact = {};
-
-  const email = contactEmailInput.value.trim();
-  const qq = contactQQInput.value.trim();
-  const wechat = contactWechatInput.value.trim();
-
-  if (email) {
-    contact.email = email;
-  }
-  if (qq) {
-    contact.qq = qq;
-  }
-  if (wechat) {
-    contact.wechat = wechat;
-  }
-
-  return contact;
 }
 
 /**
@@ -516,8 +491,6 @@ function populateEditInterface(club) {
   formData.set('shortDescription', club.short_description || '');
   formData.set('longDescription', club.long_description || '');
   formData.set('tags', club.tags && club.tags.length > 0 ? club.tags.join(', ') : '');
-  formData.set('website', club.website || '');
-  formData.set('contact', formatContactInfo(club.contact) || '');
   formData.set('logo', club.img_name || '');
 
   // Set logo
@@ -539,21 +512,55 @@ function populateEditInterface(club) {
   displayElements.shortDescription.textContent = club.short_description || '-';
   displayElements.longDescription.textContent = club.long_description || '-';
   displayElements.tags.textContent = club.tags && club.tags.length > 0 ? club.tags.join(', ') : '-';
-  displayElements.website.textContent = club.website || '-';
-  displayElements.contact.textContent = formatContactInfo(club.contact) || '-';
-}
 
-// Format contact information for display
-function formatContactInfo(contact) {
-  if (!contact) return '';
+  // Populate external links form from club data
+  // Clear existing links first
+  linksContainer.innerHTML = '';
   
-  const parts = [];
-  if (contact.email) parts.push(`邮箱: ${contact.email}`);
-  if (contact.phone) parts.push(`电话: ${contact.phone}`);
-  if (contact.qq) parts.push(`QQ: ${contact.qq}`);
-  if (contact.wechat) parts.push(`微信: ${contact.wechat}`);
+  // Add links from club data
+  if (club.external_links && club.external_links.length > 0) {
+    club.external_links.forEach(link => {
+      const linkItem = document.createElement('div');
+      linkItem.className = 'link-item';
+      linkItem.innerHTML = `
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="text" placeholder="链接类型 (例: 官网、微博)" class="link-type" value="${link.type || ''}" />
+          <input type="url" placeholder="https://example.com" class="link-url" value="${link.url || ''}" />
+          <button type="button" class="remove-link-btn" style="padding: 5px 10px;">删除</button>
+        </div>
+      `;
+      
+      // Add remove button listener
+      const removeBtn = linkItem.querySelector('.remove-link-btn');
+      removeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleRemoveLinkClick(e);
+      });
+      
+      linksContainer.appendChild(linkItem);
+    });
+  } else {
+    // Add one empty link item if no links exist
+    const linkItem = document.createElement('div');
+    linkItem.className = 'link-item';
+    linkItem.innerHTML = `
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <input type="text" placeholder="链接类型 (例: 官网、微博)" class="link-type" />
+        <input type="url" placeholder="https://example.com" class="link-url" />
+        <button type="button" class="remove-link-btn" style="padding: 5px 10px;">删除</button>
+      </div>
+    `;
+    
+    const removeBtn = linkItem.querySelector('.remove-link-btn');
+    removeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleRemoveLinkClick(e);
+    });
+    
+    linksContainer.appendChild(linkItem);
+  }
   
-  return parts.join(' | ');
+  updateRemoveButtonVisibility();
 }
 
 // Handle edit button clicks
@@ -584,8 +591,7 @@ function getFieldDisplayName(field) {
     shortDescription: '编辑社团简介（短）',
     longDescription: '编辑社团简介（长）',
     tags: '编辑标签',
-    website: '编辑官方网站',
-    contact: '编辑联系方式',
+    external_links: '编辑外部链接',
     logo: '编辑社团Logo'
   };
   return names[field] || '编辑信息';
@@ -671,34 +677,13 @@ function generateEditForm(field) {
         </label>
       `;
     
-    case 'website':
-      return `
-        <label class="form-field">
-          <span>官方网站</span>
-          <input type="url" id="editWebsite" value="${currentValue}">
-        </label>
-      `;
-    
-    case 'contact':
-      const contact = parseContactInfo(currentValue);
+    case 'external_links':
+      // External links are handled via the dynamic form, not inline edit
       return `
         <div class="form-field">
-          <label>
-            <span>邮箱</span>
-            <input type="email" id="editEmail" value="${contact.email || ''}">
-          </label>
-          <label>
-            <span>电话</span>
-            <input type="tel" id="editPhone" value="${contact.phone || ''}">
-          </label>
-          <label>
-            <span>QQ</span>
-            <input type="text" id="editQQ" value="${contact.qq || ''}">
-          </label>
-          <label>
-            <span>微信</span>
-            <input type="text" id="editWechat" value="${contact.wechat || ''}">
-          </label>
+          <span>外部链接</span>
+          <div id="editLinksContainer" class="links-container"></div>
+          <button type="button" id="addEditLinkBtn" class="add-link-btn">+ 添加链接</button>
         </div>
       `;
     
@@ -727,8 +712,7 @@ function getCurrentFieldValue(field) {
     case 'shortDescription': return selectedClub.short_description || '';
     case 'longDescription': return selectedClub.long_description || '';
     case 'tags': return selectedClub.tags && selectedClub.tags.length > 0 ? selectedClub.tags.join(', ') : '';
-    case 'website': return selectedClub.website || '';
-    case 'contact': return formatContactInfo(selectedClub.contact) || '';
+    case 'external_links': return selectedClub.external_links || [];
     case 'logo': return selectedClub.img_name || '';
     default: return '';
   }
@@ -744,22 +728,6 @@ function parseCoordinates(coordStr) {
   if (!coordStr || coordStr === '-') return ['', ''];
   const parts = coordStr.split(', ');
   return [parts[0] || '', parts[1] || ''];
-}
-
-function parseContactInfo(contactStr) {
-  if (!contactStr || contactStr === '-') return {};
-  
-  const contact = {};
-  const parts = contactStr.split(' | ');
-  
-  parts.forEach(part => {
-    if (part.startsWith('邮箱: ')) contact.email = part.substring(4);
-    else if (part.startsWith('电话: ')) contact.phone = part.substring(4);
-    else if (part.startsWith('QQ: ')) contact.qq = part.substring(4);
-    else if (part.startsWith('微信: ')) contact.wechat = part.substring(4);
-  });
-  
-  return contact;
 }
 
 // Handle cancel edit
@@ -856,22 +824,22 @@ function getEditedValue(field) {
     case 'tags':
       return document.getElementById('editTags').value.trim();
     
-    case 'website':
-      return document.getElementById('editWebsite').value.trim();
-    
-    case 'contact':
-      const email = document.getElementById('editEmail').value.trim();
-      const phone = document.getElementById('editPhone').value.trim();
-      const qq = document.getElementById('editQQ').value.trim();
-      const wechat = document.getElementById('editWechat').value.trim();
-      
-      const contactParts = [];
-      if (email) contactParts.push(`邮箱: ${email}`);
-      if (phone) contactParts.push(`电话: ${phone}`);
-      if (qq) contactParts.push(`QQ: ${qq}`);
-      if (wechat) contactParts.push(`微信: ${wechat}`);
-      
-      return contactParts.join(' | ');
+    case 'external_links':
+      // Collect external links from the edit form
+      const editLinksContainer = document.getElementById('editLinksContainer');
+      if (!editLinksContainer) return [];
+      const linkItems = editLinksContainer.querySelectorAll('.link-item');
+      const links = [];
+      linkItems.forEach(item => {
+        const typeInput = item.querySelector('.link-type-input') || item.querySelector('.link-type');
+        const urlInput = item.querySelector('.link-url-input') || item.querySelector('.link-url');
+        const type = typeInput?.value.trim();
+        const url = urlInput?.value.trim();
+        if (type && url) {
+          links.push({ type, url });
+        }
+      });
+      return links;
     
     case 'logo':
       return document.getElementById('editLogo').files[0];
@@ -907,13 +875,6 @@ function validateEditedValue(field, value) {
       }
       break;
     
-    case 'website':
-      if (value && !isValidUrl(value)) {
-        showMessage('网站链接格式不正确', 'error');
-        return false;
-      }
-      break;
-    
     case 'logo':
       if (value && !validateLogoFile(value)) {
         return false;
@@ -922,16 +883,6 @@ function validateEditedValue(field, value) {
   }
   
   return true;
-}
-
-// Validate URL
-function isValidUrl(string) {
-  try {
-    new URL(string);
-    return true;
-  } catch (_) {
-    return false;
-  }
 }
 
 // Validate logo file
@@ -988,13 +939,8 @@ function updateFormData(field, value) {
       formData.set('tags', JSON.stringify(tags));
       break;
     
-    case 'website':
-      formData.set('website', value);
-      break;
-    
-    case 'contact':
-      const contact = parseContactInfo(value);
-      formData.set('contact', JSON.stringify(contact));
+    case 'external_links':
+      formData.set('external_links', JSON.stringify(value || []));
       break;
     
     case 'logo':
@@ -1036,12 +982,8 @@ function updateDisplayValue(field, value) {
       displayElements.tags.textContent = value || '-';
       break;
     
-    case 'website':
-      displayElements.website.textContent = value || '-';
-      break;
-    
-    case 'contact':
-      displayElements.contact.textContent = value || '-';
+    case 'external_links':
+      displayElements.externalLinks.textContent = formatExternalLinksDisplay(value) || '-';
       break;
     
     case 'logo':
@@ -1054,6 +996,14 @@ function updateDisplayValue(field, value) {
       }
       break;
   }
+}
+
+// Format external links for display
+function formatExternalLinksDisplay(links) {
+  if (!Array.isArray(links) || links.length === 0) {
+    return '-';
+  }
+  return links.map(link => `${link.type}: ${link.url}`).join(' | ');
 }
 
 // Initialize remove button visibility
@@ -1154,12 +1104,6 @@ confirmEdit.addEventListener('click', async () => {
           break;
         case 'tags':
           submissionData.tags = parseTags(value);
-          break;
-        case 'website':
-          submissionData.website = value;
-          break;
-        case 'contact':
-          submissionData.contact = value;
           break;
       }
     }

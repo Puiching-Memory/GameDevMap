@@ -77,8 +77,7 @@ router.get('/', async (req, res) => {
       short_description: club.shortDescription || '',
       long_description: club.description || '',
       tags: club.tags || [],
-      website: club.website || '',
-      contact: club.contact || {},
+      external_links: club.external_links || [],
       shortDescription: club.shortDescription || '',
       description: club.description || '',
       coordinates: club.coordinates,
@@ -133,8 +132,7 @@ router.get('/:id', async (req, res) => {
       short_description: club.shortDescription || '',
       long_description: club.description || '',
       tags: club.tags || [],
-      website: club.website || '',
-      contact: club.contact || {}
+      external_links: club.external_links || []
     };
 
     return res.status(200).json({
@@ -156,7 +154,7 @@ router.get('/:id', async (req, res) => {
  * 管理员端点 - 编辑社团信息
  * 
  * @param {string} id - 社团ID
- * @body {Object} 更新数据（支持：name, school, province, city, coordinates, description, shortDescription, tags, website, contact）
+ * @body {Object} 更新数据（支持：name, school, province, city, coordinates, description, shortDescription, tags, external_links）
  * @returns {Object} 更新结果
  */
 router.put('/:id', authenticate, async (req, res) => {
@@ -178,7 +176,7 @@ router.put('/:id', authenticate, async (req, res) => {
     const allowedFields = [
       'name', 'school', 'province', 'city', 
       'description', 'shortDescription', 
-      'tags', 'website', 'contact', 'coordinates'
+      'tags', 'external_links', 'coordinates'
     ];
 
     // 更新允许的字段

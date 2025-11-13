@@ -34,8 +34,7 @@ function formatClubForJson(club) {
     short_description: club.shortDescription || '',
     long_description: club.description || '',
     tags: club.tags || [],
-    website: club.website || '',
-    contact: club.contact || {}
+    external_links: club.external_links || []
   };
 }
 

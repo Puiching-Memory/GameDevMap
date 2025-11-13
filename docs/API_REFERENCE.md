@@ -384,8 +384,7 @@ curl -X POST http://localhost:3000/api/upload/logo \
 | `description` | `string` | 可选 | 详细介绍 | - |
 | `shortDescription` | `string` | 可选 | 简介 | - |
 | `tags` | `Array<string>` | 可选 | 标签数组 | - |
-| `website` | `string` | 可选 | 官方网站 | - |
-| `contact` | `Object` | 可选 | 联系方式对象 | - |
+| `external_links` | `Array<Object>` | 可选 | 外部链接数组 | - |
 | `coordinates` | `Array<number>` | 可选 | 坐标数组 [经度,纬度] | - |
 
 **返回值：**
@@ -595,8 +594,7 @@ Authorization: Bearer <admin_token>
 | `shortDescription` | `string` | 可选 | 简介 |
 | `tags` | `Array<string>` | 可选 | 标签数组 |
 | `logo` | `string` | 可选 | Logo文件名 |
-| `website` | `string` | 可选 | 官方网站 |
-| `contact` | `Object` | 可选 | 联系方式 |
+| `external_links` | `Array<Object>` | 可选 | 外部链接数组，每项包含 `type` 和 `url` |
 | `createdAt` | `Date` | 自动 | 创建时间 |
 | `updatedAt` | `Date` | 自动 | 更新时间 |
 

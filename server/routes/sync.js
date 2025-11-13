@@ -24,8 +24,7 @@ function formatClub(club) {
     short_description: club.shortDescription || club.short_description || '',
     long_description: club.description || club.long_description || '',
     tags: club.tags || [],
-    website: club.website || '',
-    contact: club.contact || {}
+    external_links: club.external_links || []
   };
 }
 
@@ -242,8 +241,7 @@ router.post('/merge', authenticate, async (req, res) => {
             description: existingClub.description,
             shortDescription: existingClub.shortDescription,
             tags: existingClub.tags || [],
-            website: existingClub.website,
-            contact: existingClub.contact || {}
+            external_links: existingClub.external_links || []
           });
           
           const jsonStr = JSON.stringify({
@@ -255,8 +253,7 @@ router.post('/merge', authenticate, async (req, res) => {
             description: jsonClub.long_description,
             shortDescription: jsonClub.short_description,
             tags: jsonClub.tags || [],
-            website: jsonClub.website,
-            contact: jsonClub.contact || {}
+            external_links: jsonClub.external_links || []
           });
 
           if (dbStr !== jsonStr) {
@@ -272,8 +269,7 @@ router.post('/merge', authenticate, async (req, res) => {
                 description: jsonClub.long_description,
                 shortDescription: jsonClub.short_description,
                 tags: jsonClub.tags || [],
-                website: jsonClub.website,
-                contact: jsonClub.contact || {},
+                external_links: jsonClub.external_links || [],
                 logo: jsonClub.img_name || ''
               },
               { new: true }
@@ -296,8 +292,7 @@ router.post('/merge', authenticate, async (req, res) => {
             description: jsonClub.long_description,
             shortDescription: jsonClub.short_description,
             tags: jsonClub.tags || [],
-            website: jsonClub.website,
-            contact: jsonClub.contact || {},
+            external_links: jsonClub.external_links || [],
             logo: jsonClub.img_name || ''
           });
           dbAdded++;

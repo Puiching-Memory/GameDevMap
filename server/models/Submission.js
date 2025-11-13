@@ -100,16 +100,12 @@ const submissionSchema = new mongoose.Schema({
       type: String,
       trim: true
     },
-    website: {
-      type: String,
-      trim: true
-    },
-    contact: {
-      email: String,
-      qq: String,
-      wechat: String,
-      discord: String,
-      github: String
+    external_links: {
+      type: [{
+        type: { type: String },
+        url: { type: String }
+      }],
+      default: []
     }
   },
   

@@ -119,8 +119,7 @@ router.post('/',
           shortDescription: req.validatedData.short_description || '',
           tags: req.validatedData.tags || [],
           logo: req.validatedData.logo || '',
-          website: '',
-          contact: {}
+          external_links: req.validatedData.external_links || []
         },
         metadata: {
           ipAddress,
@@ -344,8 +343,7 @@ router.put('/:id/approve', authenticate, async (req, res) => {
       shortDescription: submission.data.shortDescription || '',
       tags: submission.data.tags,
       logo: processedLogoFilename, // 使用处理后的文件名
-      website: submission.data.website,
-      contact: submission.data.contact,
+      external_links: submission.data.external_links || [],
       sourceSubmission: submission._id,
       verifiedBy: req.user.username
     });

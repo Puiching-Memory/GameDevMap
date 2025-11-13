@@ -56,8 +56,7 @@ async function migrateClubs() {
           shortDescription: club.short_description || '',
           tags: club.tags || [],
           logo: club.img_name || '',
-          website: club.website || '',
-          contact: club.contact || {},
+          external_links: club.external_links || [],
           verifiedBy: 'system',
           updatedAt: new Date()
         };

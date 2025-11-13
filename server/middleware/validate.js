@@ -171,8 +171,6 @@ const submissionSchema = Joi.object({
       'string.uri': 'Logo 路径格式不正确'
     }),
 
-  contact: Joi.object().optional(),
-
   submitterEmail: Joi.string()
     .email()
     .required()

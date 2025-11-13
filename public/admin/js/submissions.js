@@ -359,6 +359,13 @@ function createCoordinateText(coordinates) {
   return '-';
 }
 
+function formatExternalLinks(links) {
+  if (!links || !Array.isArray(links) || links.length === 0) {
+    return '未提供';
+  }
+  return links.map(link => `${link.type}: ${link.url}`).join(' | ');
+}
+
 function renderDetail(submission) {
   currentSubmission = submission;
 
@@ -384,7 +391,7 @@ function renderDetail(submission) {
     ['短简介', submission.data?.shortDescription || '未提供'],
     ['长简介', submission.data?.description || '未提供'],
     ['Logo', submission.data?.logo || '未上传'],
-    ['网站', submission.data?.website || '未提供']
+    ['外部链接', formatExternalLinks(submission.data?.external_links)]
   );
 
   fillList(clubInfoList, clubInfo);
@@ -438,17 +445,27 @@ function renderEditComparison(submission) {
     { key: 'description', label: '长简介' },
     { key: 'tags', label: '标签' },
     { key: 'logo', label: 'Logo' },
-    { key: 'website', label: '网站' }
+    { key: 'external_links', label: '外部链接' }
   ];
 
   fields.forEach(field => {
-    const oldValue = field.key === 'tags' && Array.isArray(original[field.key])
-      ? original[field.key].join(', ')
-      : original[field.key] || '未提供';
+    let oldValue, newValue;
     
-    const newValue = field.key === 'tags' && Array.isArray(updated[field.key])
-      ? updated[field.key].join(', ')
-      : updated[field.key] || '未提供';
+    if (field.key === 'tags' && Array.isArray(original[field.key])) {
+      oldValue = original[field.key].join(', ');
+    } else if (field.key === 'external_links' && Array.isArray(original[field.key])) {
+      oldValue = formatExternalLinks(original[field.key]);
+    } else {
+      oldValue = original[field.key] || '未提供';
+    }
+    
+    if (field.key === 'tags' && Array.isArray(updated[field.key])) {
+      newValue = updated[field.key].join(', ');
+    } else if (field.key === 'external_links' && Array.isArray(updated[field.key])) {
+      newValue = formatExternalLinks(updated[field.key]);
+    } else {
+      newValue = updated[field.key] || '未提供';
+    }
 
     const hasChanged = oldValue !== newValue;
 

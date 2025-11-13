@@ -45,15 +45,12 @@ const clubSchema = new mongoose.Schema({
   logo: {
     type: String
   },
-  website: {
-    type: String
-  },
-  contact: {
-    email: String,
-    qq: String,
-    wechat: String,
-    discord: String,
-    github: String
+  external_links: {
+    type: [{
+      type: { type: String },
+      url: { type: String }
+    }],
+    default: []
   },
   
   // Audit trail fields

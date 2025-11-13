@@ -11,8 +11,7 @@
     "short_description": "是游戏制作爱好者的聚集地",
     "long_description": "",
     "tags": [],
-    "website": "",
-    "contact": {}
+    "external_links": []
   },
   {
     "id": "6914e29a0f72a898ffbd9889",
@@ -28,8 +27,7 @@
     "tags": [
       "游戏开发"
     ],
-    "website": "",
-    "contact": {}
+    "external_links": []
   },
   {
     "id": "691356ed014c1d4dbbc53f4c",
@@ -48,8 +46,7 @@
       "编程",
       "美术"
     ],
-    "website": "",
-    "contact": {}
+    "external_links": []
   },
   {
     "id": "6913134a62b484cf99359411",
@@ -69,8 +66,12 @@
       "竞赛",
       "Gamejam"
     ],
-    "website": "",
-    "contact": {}
+    "external_links": [
+      {
+        "type": "逻机游创飞书主页",
+        "url": "https://icnxn3e8k996.feishu.cn/wiki/LuIewhxV7iNYspkhgb9cCM5vnIg?from=from_copylink"
+      }
+    ]
   },
   {
     "id": "691305a269db973e744a47fc",
@@ -92,8 +93,7 @@
       "Gamejam",
       "闲聊"
     ],
-    "website": "",
-    "contact": {}
+    "external_links": []
   },
   {
     "id": "691305a269db973e744a47f9",
@@ -116,8 +116,12 @@
       "Game派对",
       "闲聊"
     ],
-    "website": "",
-    "contact": {}
+    "external_links": [
+      {
+        "type": "微光漫摄协会官网",
+        "url": "https://siulight.com"
+      }
+    ]
   },
   {
     "id": "691305a269db973e744a47f6",
@@ -139,8 +143,12 @@
       "Gamejam",
       "闲聊"
     ],
-    "website": "",
-    "contact": {}
+    "external_links": [
+      {
+        "type": "游戏开发协会首页",
+        "url": "https://bqt4a2kph6x.feishu.cn/wiki/GpHpwcLT2iunl2kmFt7cYDbrnhe"
+      }
+    ]
   },
   {
     "id": "691305a269db973e744a47f3",
@@ -162,8 +170,12 @@
       "Godot",
       "Gamejam"
     ],
-    "website": "",
-    "contact": {}
+    "external_links": [
+      {
+        "type": "知识库/社群联系方式",
+        "url": "https://rcn5t7x1agov.feishu.cn/wiki/O2iZwMmjGiql3skD0khceKx1nRe"
+      }
+    ]
   },
   {
     "id": "691305a269db973e744a47f0",
@@ -183,8 +195,16 @@
       "策划",
       "2d与3d美术"
     ],
-    "website": "",
-    "contact": {}
+    "external_links": [
+      {
+        "type": "《烛光：灵魂边境》",
+        "url": "https://www.taptap.cn/app/726467?os=pc"
+      },
+      {
+        "type": "《新闻学模拟器》",
+        "url": "https://www.gcores.com/games/141972"
+      }
+    ]
   },
   {
     "id": "691305a269db973e744a47ed",
@@ -200,8 +220,7 @@
     "tags": [
       "正式社团"
     ],
-    "website": "",
-    "contact": {}
+    "external_links": []
   },
   {
     "id": "guang-star-workshop",
@@ -221,7 +240,6 @@
       "GameMaker Studio",
       "Gamejam"
     ],
-    "website": "",
-    "contact": {}
+    "external_links": []
   }
 ]
