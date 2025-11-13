@@ -2,6 +2,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const Club = require('../models/Club');
 const Submission = require('../models/Submission');
+require('dotenv').config();
 
 /**
  * 清理孤立Logo文件的脚本
@@ -86,9 +87,9 @@ async function cleanupOrphanedLogos() {
 // 如果直接运行此脚本
 if (require.main === module) {
   const mongoose = require('mongoose');
-  const db = require('../config/db');
+  require('dotenv').config();
 
-  mongoose.connect(db.mongoURI, {
+  mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
