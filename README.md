@@ -1,15 +1,13 @@
 # 全国高校游戏开发社团地图
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)   
+
 一个功能完整的全国高校游戏开发社团互动地图平台，包含前端展示、后端管理、数据同步等完整功能。
 
 ## 快速开始
 
 ### 在线访问
-- **主站**：http://8.163.12.243
-- **管理后台**：http://8.163.12.243/admin
-- **提交页面**：http://8.163.12.243/submit.html
-
+- **当前部署于**：http://8.163.12.243
 
 ## 联系方式
 ![QQ](https://img.shields.io/badge/QQ-2470819243-blue?style=flat&logo=qq)
