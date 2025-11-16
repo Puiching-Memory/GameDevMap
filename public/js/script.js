@@ -470,7 +470,7 @@ function setupSearch() {
             item.querySelector('p').textContent = `${club.school} - ${club.city}`;
             
             const div = item.querySelector('.search-result-item');
-            div.onclick = () => selectSearchResult(club.id);
+            div.onclick = () => selectSearchResult(`${club.name}|${club.school}`);
             
             searchResults.appendChild(item);
         });
@@ -478,8 +478,8 @@ function setupSearch() {
 }
 
 // 选择搜索结果
-function selectSearchResult(clubId) {
-    const club = clubsData.find(c => c.id === clubId);
+function selectSearchResult(clubIdentifier) {
+    const club = clubsData.find(c => `${c.name}|${c.school}` === clubIdentifier);
     if (club) {
         showClubDetails(club);
         locateClub(club);
@@ -719,7 +719,7 @@ function showProvinceClubs(province) {
         item.querySelector('p').textContent = `${club.school} - ${club.city}`;
         
         const clubItem = item.querySelector('.province-club-item');
-        clubItem.onclick = () => selectClub(club.id);
+        clubItem.onclick = () => selectClub(`${club.name}|${club.school}`);
         
         listDiv.appendChild(item);
     });
@@ -728,8 +728,8 @@ function showProvinceClubs(province) {
 }
 
 // 选择社团（从省份列表中）
-function selectClub(clubId) {
-    const club = clubsData.find(c => c.id === clubId);
+function selectClub(clubIdentifier) {
+    const club = clubsData.find(c => `${c.name}|${c.school}` === clubIdentifier);
     if (club) {
         showClubDetails(club);
         locateClub(club);

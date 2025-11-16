@@ -831,3 +831,17 @@ body {
   border-color: var(--primary-color);
   color: var(--primary-color);
 }
+
+/* 只读标签样式 */
+.read-only-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: #f0f2f5;
+  color: #626262;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 0.5rem;
+}

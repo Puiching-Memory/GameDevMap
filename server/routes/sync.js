@@ -7,13 +7,8 @@ const { authenticate } = require('../middleware/auth');
 const syncToJson = require('../scripts/syncToJson');
 
 /**
- * 格式化 Club 对象为统一的 MongoDB 格式
- * 
- * 统一后的格式（驼峰命名）：
- * - id, name, school, city, province
- * - coordinates: [lng, lat]
- * - logo, shortDescription, description
- * - tags, externalLinks (无 _id)
+ * 格式化 Club 对象为统一的输出格式
+ * 不包含 id 字段，使用 name+school 作为标识
  */
 function formatClub(club) {
   // 处理外部链接，移除 MongoDB 的 _id 字段
@@ -23,16 +18,9 @@ function formatClub(club) {
       type: link.type,
       url: link.url
     }));
-  } else if (club.externalLinks && Array.isArray(club.externalLinks)) {
-    // 兼容旧字段名
-    externalLinks = club.externalLinks.map(link => ({
-      type: link.type,
-      url: link.url
-    }));
   }
 
   return {
-    id: club._id ? club._id.toString() : club.id,
     name: club.name,
     school: club.school,
     city: club.city || '',
@@ -176,25 +164,22 @@ router.get('/compare', authenticate, async (req, res) => {
       });
     }
 
-    // 创建映射表
+    // 创建映射表（使用 name+school 作为标识）
     const dbMap = new Map();
     const jsonMap = new Map();
-    const nameMap = new Map(); // 用于按名称匹配
+    const nameSchoolMap = new Map(); // 用于按 name+school 匹配
 
     dbClubs.forEach(club => {
       const formatted = formatClub(club);
-      dbMap.set(formatted.id, formatted);
       const key = `${formatted.name.toLowerCase()}-${formatted.school.toLowerCase()}`;
-      nameMap.set(key, { db: formatted });
+      dbMap.set(key, { db: formatted, mongoId: club._id });
     });
 
     jsonClubs.forEach(club => {
-      jsonMap.set(club.id, club);
       const key = `${club.name.toLowerCase()}-${club.school.toLowerCase()}`;
-      if (nameMap.has(key)) {
-        nameMap.get(key).json = club;
-      } else {
-        nameMap.set(key, { json: club });
+      jsonMap.set(key, club);
+      if (dbMap.has(key)) {
+        dbMap.get(key).json = club;
       }
     });
 
@@ -204,7 +189,6 @@ router.get('/compare', authenticate, async (req, res) => {
       different: [],      // 存在差异
       dbOnly: [],        // 仅在数据库中
       jsonOnly: [],      // 仅在JSON中
-      conflicts: [],      // 名称相同但ID不同（可能的冲突）
       duplicates: []     // 重复记录
     };
 
@@ -212,33 +196,22 @@ router.get('/compare', authenticate, async (req, res) => {
     const duplicateGroups = detectDuplicates(dbClubs, jsonClubs);
     result.duplicates = duplicateGroups;
 
-    // 按名称比对
-    for (const [key, data] of nameMap) {
+    // 按 name+school 比对
+    for (const [key, data] of dbMap) {
       if (data.db && data.json) {
-        if (data.db.id === data.json.id) {
-          // ID相同，检查内容是否相同
-          // 先将数据库对象转换为JSON格式，然后进行比较
-          const dbFormatted = formatClub(data.db);
-          const differences = findDifferences(dbFormatted, data.json);
-          
-          if (differences.length === 0) {
-            result.identical.push({
-              club: dbFormatted,
-              source: 'both'
-            });
-          } else {
-            result.different.push({
-              db: dbFormatted,
-              json: data.json,
-              differences: differences
-            });
-          }
+        // name+school 相同
+        const differences = findDifferences(data.db, data.json);
+        
+        if (differences.length === 0) {
+          result.identical.push({
+            club: data.db,
+            source: 'both'
+          });
         } else {
-          // 名称相同但ID不同，可能是冲突
-          result.conflicts.push({
+          result.different.push({
             db: data.db,
             json: data.json,
-            reason: 'Same name but different ID'
+            differences: differences
           });
         }
       } else if (data.db && !data.json) {
@@ -263,7 +236,6 @@ router.get('/compare', authenticate, async (req, res) => {
         different: result.different.length,
         dbOnly: result.dbOnly.length,
         jsonOnly: result.jsonOnly.length,
-        conflicts: result.conflicts.length,
         duplicates: result.duplicates.length
       }
     };
@@ -315,24 +287,20 @@ router.post('/merge', authenticate, async (req, res) => {
       jsonClubs = [];
     }
 
-    // 创建映射表（注意：merge 后需要重新查询 MongoDB，因为第一步可能已修改数据）
+    // 创建映射表（基于 name+school）
     const dbClubsAfterFirstStep = await Club.find({}).lean();
-    const dbMap = new Map();
-    const nameMap = new Map(); // 用于名称+学校匹配
+    const dbNameSchoolMap = new Map(); // name+school -> club
     
     dbClubsAfterFirstStep.forEach(club => {
-      dbMap.set(club._id.toString(), club);
-      const key = `${club.name}-${club.school}`;
-      nameMap.set(key, club);
+      const key = `${club.name}|${club.school}`;
+      dbNameSchoolMap.set(key, club);
     });
     
-    const jsonMap = new Map();
-    const jsonNameMap = new Map();
+    const jsonNameSchoolMap = new Map(); // name+school -> club
     
     jsonClubs.forEach(club => {
-      jsonMap.set(club.id, club);
-      const key = `${club.name}-${club.school}`;
-      jsonNameMap.set(key, club);
+      const key = `${club.name}|${club.school}`;
+      jsonNameSchoolMap.set(key, club);
     });
 
     let dbAdded = 0;
@@ -342,25 +310,14 @@ router.post('/merge', authenticate, async (req, res) => {
     let unchanged = 0;
 
     // ========== 第一步：处理 JSON -> MongoDB ==========
-    // 将 JSON 中的数据合并到 MongoDB
+    // 将 JSON 中的数据合并到 MongoDB（仅合并新增）
     for (const jsonClub of jsonClubs) {
       try {
-        // 首先尝试通过 ID 精确匹配
-        let existingClub = null;
-        try {
-          existingClub = await Club.findById(jsonClub.id);
-        } catch (e) {
-          // ID 格式不是有效的 ObjectId，尝试通过名称+学校匹配
-          existingClub = null;
-        }
-
-        // 如果 ID 匹配失败，尝试通过名称+学校匹配
-        if (!existingClub) {
-          existingClub = await Club.findOne({
-            name: jsonClub.name,
-            school: jsonClub.school
-          });
-        }
+        const nameSchoolKey = `${jsonClub.name}|${jsonClub.school}`;
+        const existingClub = await Club.findOne({
+          name: jsonClub.name,
+          school: jsonClub.school
+        });
 
         if (existingClub) {
           // 检查是否需要更新
@@ -436,69 +393,53 @@ router.post('/merge', authenticate, async (req, res) => {
     }
 
     // ========== 第二步：处理 MongoDB -> JSON ==========
-    // 将 MongoDB 中的新数据添加到 JSON，并更新现有记录
+    // 更新 JSON 中已存在的记录，添加 DB 中独有的记录
     const updatedJsonClubs = [];
-    const processedJsonIds = new Set(); // 跟踪已处理的 JSON ID，防止重复
+    const processedNameSchools = new Set(); // name+school -> 已处理过的组合
     
-    for (const dbClub of dbClubsAfterFirstStep) {
-      const id = dbClub._id.toString();
-      const formattedClub = formatClub(dbClub);
-      const nameKey = `${dbClub.name}-${dbClub.school}`;
-      
-      // 1. 先检查是否存在于 JSON 中（通过原始 JSON ID）
-      let matchedJsonClub = null;
-      for (const jsonClub of jsonClubs) {
-        if (jsonClub.id === id) {
-          matchedJsonClub = jsonClub;
-          break;
-        }
-      }
-      
-      // 2. 如果原始 ID 不匹配，尝试通过名称+学校匹配
-      if (!matchedJsonClub) {
-        matchedJsonClub = jsonClubs.find(j => j.name === dbClub.name && j.school === dbClub.school);
-      }
-      
-      if (matchedJsonClub) {
-        // 记录已处理，避免后面重复添加
-        processedJsonIds.add(matchedJsonClub.id);
-        
-        // 找到匹配的 JSON 记录，更新内容
-        // 如果名称+学校相同但ID不同，优先使用数据库的ID
-        const matchedByNameSchool = (matchedJsonClub.id !== id);
-        const merged = {
-          ...formattedClub,
-          id: matchedByNameSchool ? id : matchedJsonClub.id,  // 如果是通过名称+学校匹配的，使用数据库ID
-          ...matchedJsonClub        // JSON 中的其他信息作为备选
-        };
-        updatedJsonClubs.push(merged);
-        jsonUpdated++;  // 记录更新操作
-        if (matchedByNameSchool) {
-          console.log(`🔄 ID updated in JSON: ${dbClub.name} (${dbClub.school}) - ${matchedJsonClub.id} → ${id}`);
-        }
-      } else {
-        // MongoDB 中的这个记录在 JSON 中完全没有对应
-        // 只有当 JSON 中确实没有这个名称的记录时，才添加
-        if (!jsonNameMap.has(nameKey)) {
-          updatedJsonClubs.push(formattedClub);
-          jsonAdded++;
-        }
-        // 否则说明在名称+学校上已被处理过（可能是旧版本），不重复添加
-      }
-    }
-
-    // 3. 添加 JSON 中独有的记录（在 MongoDB 中不存在且未被处理过）
+    // 先添加所有在 DB 中有对应的 JSON 记录（已更新的）
     for (const jsonClub of jsonClubs) {
-      if (!processedJsonIds.has(jsonClub.id) && !nameMap.has(`${jsonClub.name}-${jsonClub.school}`)) {
+      const nameSchoolKey = `${jsonClub.name}|${jsonClub.school}`;
+      const dbClub = dbNameSchoolMap.get(nameSchoolKey);
+      
+      if (dbClub) {
+        // 找到匹配的 DB 记录，使用 DB 数据更新 JSON
+        const updated = formatClub(dbClub);
+        updatedJsonClubs.push(updated);
+        processedNameSchools.add(nameSchoolKey);
+        jsonUpdated++;
+        console.log(`🔄 Updated in JSON: ${jsonClub.name} (${jsonClub.school})`);
+      } else {
+        // JSON 中有，但 DB 中没有 - 保留这条 JSON 记录（JSON 独有）
         updatedJsonClubs.push(jsonClub);
+        processedNameSchools.add(nameSchoolKey);
+        console.log(`📝 Preserved JSON-only: ${jsonClub.name} (${jsonClub.school})`);
       }
     }
 
-    // 写入更新后的 JSON 文件
-    await fs.writeFile(
-      jsonPath,
+    // 添加 DB 中独有的记录（在 JSON 中不存在）
+    for (const [nameSchoolKey, dbClub] of dbNameSchoolMap.entries()) {
+      if (!processedNameSchools.has(nameSchoolKey)) {
+        const formatted = formatClub(dbClub);
+        updatedJsonClubs.push(formatted);
+        jsonAdded++;
+        console.log(`✨ Added from DB to JSON: ${dbClub.name} (${dbClub.school})`);
+      }
+    }
+
+    // 按 index 排序，然后按 name 排序
+    updatedJsonClubs.sort((a, b) => {
+      if ((a.index || 0) !== (b.index || 0)) {
+        return (a.index || 0) - (b.index || 0);
+      }
+      return a.name.localeCompare(b.name);
+    });
+
+    // 保存更新后的 JSON 文件
+    fs.writeFileSync(
+      jsonFilePath,
       JSON.stringify(updatedJsonClubs, null, 2),
-      'utf8'
+      'utf-8'
     );
 
     return res.json({
@@ -624,7 +565,7 @@ function detectDuplicates(dbClubs, jsonClubs) {
       nameSchoolMap.set(key, []);
     }
     nameSchoolMap.get(key).push({
-      id: club._id.toString(),
+      identifier: `${club.name}|${club.school}`,
       name: club.name,
       school: club.school,
       source: 'database'
@@ -638,7 +579,7 @@ function detectDuplicates(dbClubs, jsonClubs) {
       nameSchoolMap.set(key, []);
     }
     nameSchoolMap.get(key).push({
-      id: club.id,
+      identifier: `${club.name}|${club.school}`,
       name: club.name,
       school: club.school,
       source: 'json'
@@ -649,10 +590,11 @@ function detectDuplicates(dbClubs, jsonClubs) {
   for (const [key, records] of nameSchoolMap) {
     if (records.length > 1) {
       // 检查是否真的是重复（可能同一个记录在两个地方都有）
-      const uniqueIds = new Set(records.map(r => r.id));
+      const sourceSet = new Set(records.map(r => r.source));
       
-      // 如果有多个不同的 ID，或者同一个 ID 在不同来源出现多次
-      if (uniqueIds.size > 1 || records.length > uniqueIds.size) {
+      // 如果同一记录在两个不同来源都存在，这是正常的同步
+      // 只有当有多个不同来源的记录时才算重复
+      if (sourceSet.size > 1) {
         duplicateGroups.push({
           criteria: '名称 + 学校',
           key: key,
@@ -671,7 +613,7 @@ function detectDuplicates(dbClubs, jsonClubs) {
       nameMap.set(key, []);
     }
     nameMap.get(key).push({
-      id: club._id.toString(),
+      identifier: `${club.name}|${club.school}`,
       name: club.name,
       school: club.school,
       source: 'database'
@@ -684,7 +626,7 @@ function detectDuplicates(dbClubs, jsonClubs) {
       nameMap.set(key, []);
     }
     nameMap.get(key).push({
-      id: club.id,
+      identifier: `${club.name}|${club.school}`,
       name: club.name,
       school: club.school,
       source: 'json'
@@ -698,7 +640,7 @@ function detectDuplicates(dbClubs, jsonClubs) {
       // 检查是否已经在名称+学校组中
       const alreadyReported = duplicateGroups.some(group => 
         group.criteria === '名称 + 学校' && 
-        records.every(r => group.records.some(gr => gr.id === r.id))
+        records.every(r => group.records.some(gr => gr.identifier === r.identifier))
       );
       
       if (!alreadyReported) {
@@ -721,7 +663,7 @@ function detectDuplicates(dbClubs, jsonClubs) {
         coordMap.set(key, []);
       }
       coordMap.get(key).push({
-        id: club._id.toString(),
+        identifier: `${club.name}|${club.school}`,
         name: club.name,
         school: club.school,
         source: 'database'
@@ -743,7 +685,7 @@ function detectDuplicates(dbClubs, jsonClubs) {
         coordMap.set(key, []);
       }
       coordMap.get(key).push({
-        id: club.id,
+        identifier: `${club.name}|${club.school}`,
         name: club.name,
         school: club.school,
         source: 'json'

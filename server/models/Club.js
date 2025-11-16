@@ -1,6 +1,13 @@
 const mongoose = require('mongoose');
 
 const clubSchema = new mongoose.Schema({
+  // 排序用的隐藏索引字段（仅数据库可见，不导出到JSON）
+  index: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  
   name: {
     type: String,
     required: true,
@@ -76,23 +83,32 @@ const clubSchema = new mongoose.Schema({
 clubSchema.index({ coordinates: '2dsphere' });
 clubSchema.index({ province: 1 });
 clubSchema.index({ name: 'text', school: 'text' });
+// 复合索引用于快速查找同名同校社团
+clubSchema.index({ name: 1, school: 1 });
 
-// Virtual field for `id` (maps to _id)
-clubSchema.virtual('id').get(function() {
-  return this._id.toHexString();
+// 虚拟字段：name+school组合标识
+clubSchema.virtual('identifier').get(function() {
+  return `${this.name}|${this.school}`;
 });
 
 // Ensure virtual fields are serialized
 clubSchema.set('toJSON', {
-  virtuals: true,
+  virtuals: false,  // 禁用虚拟字段序列化
   transform: function(doc, ret) {
-    ret.id = ret._id.toString();
+    // 删除数据库内部字段，不输出到JSON
+    delete ret._id;
+    delete ret.__v;
+    delete ret.index;
+    delete ret.sourceSubmission;
+    delete ret.verifiedBy;
+    
+    // 不添加 id 字段
     return ret;
   }
 });
 
 clubSchema.set('toObject', {
-  virtuals: true
+  virtuals: false
 });
 
 // Update timestamp on save

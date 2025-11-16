@@ -351,7 +351,7 @@ form.addEventListener('submit', async (event) => {
       
       payload = {
         submissionType: currentMode,
-        editingClubId: selectedClub.id,
+        editingClubId: `${selectedClub.name}|${selectedClub.school}`,
         name: formData.get('name') || selectedClub.name || '',
         school: formData.get('school') || selectedClub.school || '',
         province: formData.get('province') || selectedClub.province || '',
@@ -729,6 +729,12 @@ document.addEventListener('click', (e) => {
 
 // Show edit form for a specific field
 function showEditForm(field) {
+  // 禁止编辑 name 和 school 字段
+  if (field === 'name' || field === 'school') {
+    showStatus('社团名称和所属学校不可编辑', 'error');
+    return;
+  }
+  
   currentEditingField = field;
   editFormTitle.textContent = getFieldDisplayName(field);
   editFormContent.innerHTML = generateEditForm(field);
@@ -803,8 +809,6 @@ function populateEditLinksForm() {
 // Get display name for field
 function getFieldDisplayName(field) {
   const names = {
-    name: '编辑社团名称',
-    school: '编辑所属学校',
     location: '编辑所在地区',
     coordinates: '编辑坐标信息',
     shortDescription: '编辑社团简介（短）',
@@ -821,22 +825,6 @@ function generateEditForm(field) {
   const currentValue = getCurrentFieldValue(field);
   
   switch (field) {
-    case 'name':
-      return `
-        <label class="form-field">
-          <span>社团名称 <strong class="required">*</strong></span>
-          <input type="text" id="editName" value="${currentValue}" required maxlength="100">
-        </label>
-      `;
-    
-    case 'school':
-      return `
-        <label class="form-field">
-          <span>所属学校 <strong class="required">*</strong></span>
-          <input type="text" id="editSchool" value="${currentValue}" required maxlength="200">
-        </label>
-      `;
-    
     case 'location':
       const [city, province] = parseLocation(currentValue);
       return `
@@ -1280,7 +1268,7 @@ confirmEdit.addEventListener('click', async () => {
     // Start with the base structure that matches validation schema
     let submissionData = {
       submissionType: 'edit',
-      editingClubId: selectedClub.id,
+      editingClubId: `${selectedClub.name}|${selectedClub.school}`,
       submitterEmail: submitterEmail,
       // Initialize with current selected club data as defaults
       name: selectedClub.name,
