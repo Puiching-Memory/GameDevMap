@@ -441,6 +441,7 @@ function renderEditComparison(submission) {
     { key: 'school', label: '所属学校' },
     { key: 'province', label: '省份' },
     { key: 'city', label: '城市' },
+    { key: 'coordinates', label: '坐标' },
     { key: 'shortDescription', label: '短简介' },
     { key: 'description', label: '长简介' },
     { key: 'tags', label: '标签' },
@@ -448,10 +449,28 @@ function renderEditComparison(submission) {
     { key: 'externalLinks', label: '外部链接' }
   ];
 
+  // Helper function to format coordinates
+  const formatCoordinates = (data) => {
+    if (!data) return '未提供';
+    if (data.coordinates && typeof data.coordinates === 'object') {
+      // New format: coordinates object
+      const lat = data.coordinates.latitude;
+      const lng = data.coordinates.longitude;
+      return `经度：${lng}，纬度：${lat}`;
+    } else if (data.latitude && data.longitude) {
+      // Old format: separate latitude/longitude fields
+      return `经度：${data.longitude}，纬度：${data.latitude}`;
+    }
+    return '未提供';
+  };
+
   fields.forEach(field => {
     let oldValue, newValue;
     
-    if (field.key === 'tags' && Array.isArray(original[field.key])) {
+    if (field.key === 'coordinates') {
+      oldValue = formatCoordinates(original);
+      newValue = formatCoordinates(updated);
+    } else if (field.key === 'tags' && Array.isArray(original[field.key])) {
       oldValue = original[field.key].join(', ');
     } else if (field.key === 'externalLinks' && Array.isArray(original[field.key])) {
       oldValue = formatExternalLinks(original[field.key]);
@@ -463,7 +482,7 @@ function renderEditComparison(submission) {
       newValue = updated[field.key].join(', ');
     } else if (field.key === 'externalLinks' && Array.isArray(updated[field.key])) {
       newValue = formatExternalLinks(updated[field.key]);
-    } else {
+    } else if (field.key !== 'coordinates') {
       newValue = updated[field.key] || '未提供';
     }
 
