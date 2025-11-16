@@ -1,6 +1,6 @@
 [
   {
-    "id": "6916dfb4f65bbbec1347b1f7",
+    "id": "69185f8cf65bbbec1347b2e7",
     "name": "深职大元创社",
     "school": "深圳职业技术大学",
     "city": "深圳市",
@@ -26,7 +26,7 @@
     "externalLinks": []
   },
   {
-    "id": "691623f9f65bbbec1347b11f",
+    "id": "69185f8cf65bbbec1347b2e9",
     "name": "零乘游创社",
     "school": "普宁市第二中学",
     "city": "揭阳市",
@@ -36,7 +36,7 @@
       23.28
     ],
     "logo": "20251113_6c7lv5ez_logo.png",
-    "shortDescription": "我们的口号是：游戏改变世界",
+    "shortDescription": "广东优秀的中学游戏开发社团，培养游戏开发素养。",
     "description": "零乘游创社是位于普宁市第二中学的社团，社团包含人机交互部、视觉艺术部、听觉艺术部和映画编制部，四个部门分别教学程序(Gamemaker)、音乐音效(FL)、美术和视频剪辑，同时提供游戏设计通识课教学。社团提供和谐氛围，社友交流密切，是许多从普宁二中走出的游戏人的第一步。",
     "tags": [
       "正式社团",
@@ -59,14 +59,14 @@
     ]
   },
   {
-    "id": "691623f9f65bbbec1347b11c",
+    "id": "69185f8cf65bbbec1347b2eb",
     "name": "GAMERS游戏制作社",
     "school": "吉林动画学院",
     "city": "长春市",
     "province": "吉林省",
     "coordinates": [
-      123.429996,
-      41.81
+      125.25,
+      43.82
     ],
     "logo": "20251113_q0kdam1n_logo.png",
     "shortDescription": "是游戏制作爱好者的聚集地",
@@ -77,7 +77,7 @@
     "externalLinks": []
   },
   {
-    "id": "691623f9f65bbbec1347b11a",
+    "id": "69185f8cf65bbbec1347b2ed",
     "name": "艺数盒子",
     "school": "哈尔滨工业大学（深圳）",
     "city": "深圳市",
@@ -96,7 +96,7 @@
     "externalLinks": []
   },
   {
-    "id": "691623f9f65bbbec1347b118",
+    "id": "69185f8cf65bbbec1347b2ef",
     "name": "游创工坊",
     "school": "北京联合大学",
     "city": "北京",
@@ -118,7 +118,7 @@
     "externalLinks": []
   },
   {
-    "id": "691623f9f65bbbec1347b116",
+    "id": "69185f8cf65bbbec1347b2f1",
     "name": "逻辑机械游创社",
     "school": "赣南师范大学科技学院",
     "city": "赣州",
@@ -145,7 +145,7 @@
     ]
   },
   {
-    "id": "691623f9f65bbbec1347b114",
+    "id": "69185f8cf65bbbec1347b2f3",
     "name": "游漫社游戏与动漫设计协会",
     "school": "福建师范大学",
     "city": "福州",
@@ -169,7 +169,7 @@
     "externalLinks": []
   },
   {
-    "id": "691623f9f65bbbec1347b112",
+    "id": "69185f8cf65bbbec1347b2f5",
     "name": "微光漫摄协会游戏部",
     "school": "南昌大学",
     "city": "南昌",
@@ -199,7 +199,7 @@
     ]
   },
   {
-    "id": "691623f9f65bbbec1347b110",
+    "id": "69185f8cf65bbbec1347b2f7",
     "name": "蜂巢工作室",
     "school": "成都工业学院",
     "city": "成都",
@@ -228,7 +228,7 @@
     ]
   },
   {
-    "id": "691623f9f65bbbec1347b10e",
+    "id": "69185f8cf65bbbec1347b2f9",
     "name": "游隙拾光工作室",
     "school": "长春理工大学",
     "city": "长春",
@@ -257,7 +257,7 @@
     ]
   },
   {
-    "id": "691623f9f65bbbec1347b10c",
+    "id": "69185f8cf65bbbec1347b2fb",
     "name": "萌屋",
     "school": "湘潭大学",
     "city": "湘潭",
@@ -288,7 +288,7 @@
     ]
   },
   {
-    "id": "691623f9f65bbbec1347b10a",
+    "id": "69185f8cf65bbbec1347b2fd",
     "name": "厦门大学第九艺术游创社",
     "school": "厦门大学",
     "city": "厦门",
@@ -306,7 +306,7 @@
     "externalLinks": []
   },
   {
-    "id": "691623f9f65bbbec1347b108",
+    "id": "69185f8cf65bbbec1347b2ff",
     "name": "光Star游戏工坊",
     "school": "广东技术师范大学",
     "city": "广州",
@@ -335,5 +335,27 @@
         "url": "https://b23.tv/4Xbx0Fr"
       }
     ]
+    "externalLinks": []
+  },
+  {
+    "id": "6918664cf65bbbec1347b36e",
+    "name": "第九艺术社",
+    "school": "深圳技术大学",
+    "city": "深圳市",
+    "province": "广东省",
+    "coordinates": [
+      114.4,
+      22.7
+    ],
+    "logo": "20251115_47exw0u3_0874490788a1e1bd9e535866a6d46297.jpg",
+    "shortDescription": "游戏改变世界!",
+    "description": "第九艺术社是深圳技术大学的同好会，专注于独立游戏的讨论和开发，会组织同学一同参加Gamejam，以及进行游戏开发的交流讨论。",
+    "tags": [
+      "非正式社团",
+      "独立游戏",
+      "Gamejam",
+      "Unity"
+    ],
+    "externalLinks": []
   }
 ]
