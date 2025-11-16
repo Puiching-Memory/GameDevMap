@@ -1370,8 +1370,10 @@ confirmEdit.addEventListener('click', async () => {
           submissionData.city = value;
           break;
         case 'latitude':
+          submissionData.coordinates.latitude = parseFloat(value);
+          break;
         case 'longitude':
-          // These are handled in the coordinates case below
+          submissionData.coordinates.longitude = parseFloat(value);
           break;
         case 'coordinates':
           const [lat, lng] = value.split(', ');
