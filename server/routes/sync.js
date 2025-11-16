@@ -3,7 +3,7 @@ const router = express.Router();
 const fs = require('fs').promises;
 const path = require('path');
 const Club = require('../models/Club');
-const { authenticate, authenticateGitOperations } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const syncToJson = require('../scripts/syncToJson');
 
 /**
@@ -948,9 +948,9 @@ router.post('/overwrite-json', authenticate, async (req, res) => {
 /**
  * POST /api/sync/git-pull
  * 执行 git pull 操作
- * 需要管理员权限和启用的 Git 操作
+ * 需要有效的 JWT Token
  */
-router.post('/git-pull', authenticateGitOperations, async (req, res) => {
+router.post('/git-pull', authenticate, async (req, res) => {
   try {
     const { exec } = require('child_process');
     const { promisify } = require('util');
@@ -993,9 +993,9 @@ router.post('/git-pull', authenticateGitOperations, async (req, res) => {
 /**
  * POST /api/sync/git-push
  * 执行 git add -> commit -> push 操作
- * 需要管理员权限和启用的 Git 操作
+ * 需要有效的 JWT Token（与社团管理权限一致）
  */
-router.post('/git-push', authenticateGitOperations, async (req, res) => {
+router.post('/git-push', authenticate, async (req, res) => {
   try {
     const { exec } = require('child_process');
     const { promisify } = require('util');
