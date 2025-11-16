@@ -710,4 +710,241 @@ function detectDuplicates(dbClubs, jsonClubs) {
   return duplicateGroups;
 }
 
+/**
+ * POST /api/sync/atomic-merge-json-to-db
+ * 原子化合并：将单条 JSON 记录覆盖或添加到 Database
+ * 请求体：{ identifier: "name|school" }
+ */
+router.post('/atomic-merge-json-to-db', authenticate, async (req, res) => {
+  try {
+    const { identifier } = req.body;
+    
+    if (!identifier || !identifier.includes('|')) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_IDENTIFIER',
+        message: '无效的标识符格式，应为 name|school'
+      });
+    }
+
+    const [name, school] = identifier.split('|').map(s => s.trim());
+
+    if (!name || !school) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_IDENTIFIER',
+        message: '无效的标识符，name 或 school 为空'
+      });
+    }
+
+    // 读取 JSON 文件
+    const jsonPath = path.resolve(__dirname, '../../public/data/clubs.json');
+    const jsonData = await fs.readFile(jsonPath, 'utf8');
+    const clubs = JSON.parse(jsonData);
+
+    // 查找 JSON 中的对应记录
+    const jsonClub = clubs.find(c => c.name === name && c.school === school);
+
+    if (!jsonClub) {
+      return res.status(404).json({
+        success: false,
+        error: 'NOT_FOUND',
+        message: `在 JSON 中找不到社团: ${identifier}`
+      });
+    }
+
+    // 查找或创建 Database 中的记录
+    let dbClub = await Club.findOne({ name, school });
+
+    if (dbClub) {
+      // 更新现有记录
+      dbClub.city = jsonClub.city || dbClub.city;
+      dbClub.province = jsonClub.province || dbClub.province;
+      dbClub.coordinates = jsonClub.coordinates || dbClub.coordinates;
+      dbClub.logo = jsonClub.logo || dbClub.logo;
+      dbClub.shortDescription = jsonClub.shortDescription || dbClub.shortDescription;
+      dbClub.description = jsonClub.description || dbClub.description;
+      dbClub.tags = jsonClub.tags || dbClub.tags;
+      dbClub.externalLinks = jsonClub.externalLinks || dbClub.externalLinks;
+      await dbClub.save();
+      console.log(`✏️  更新 Database 记录: ${name} (${school})`);
+    } else {
+      // 创建新记录
+      dbClub = await Club.create({
+        name,
+        school,
+        city: jsonClub.city || '',
+        province: jsonClub.province || '',
+        coordinates: jsonClub.coordinates || [0, 0],
+        logo: jsonClub.logo || '',
+        shortDescription: jsonClub.shortDescription || '',
+        description: jsonClub.description || '',
+        tags: jsonClub.tags || [],
+        externalLinks: jsonClub.externalLinks || [],
+        index: await Club.countDocuments() // 分配新的 index
+      });
+      console.log(`✅ 创建新 Database 记录: ${name} (${school})`);
+    }
+
+    return res.json({
+      success: true,
+      message: `原子化合并成功: ${identifier}`,
+      data: {
+        action: dbClub ? '更新' : '创建',
+        club: {
+          name: dbClub.name,
+          school: dbClub.school
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Atomic merge JSON→DB error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'MERGE_FAILED',
+      message: error.message || '原子化合并失败'
+    });
+  }
+});
+
+/**
+ * POST /api/sync/atomic-merge-db-to-json
+ * 原子化合并：将单条 Database 记录覆盖或添加到 JSON 文件
+ * 请求体：{ identifier: "name|school" }
+ */
+router.post('/atomic-merge-db-to-json', authenticate, async (req, res) => {
+  try {
+    const { identifier } = req.body;
+    
+    if (!identifier || !identifier.includes('|')) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_IDENTIFIER',
+        message: '无效的标识符格式，应为 name|school'
+      });
+    }
+
+    const [name, school] = identifier.split('|').map(s => s.trim());
+
+    if (!name || !school) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_IDENTIFIER',
+        message: '无效的标识符，name 或 school 为空'
+      });
+    }
+
+    // 查找 Database 中的记录
+    const dbClub = await Club.findOne({ name, school });
+
+    if (!dbClub) {
+      return res.status(404).json({
+        success: false,
+        error: 'NOT_FOUND',
+        message: `在 Database 中找不到社团: ${identifier}`
+      });
+    }
+
+    // 读取 JSON 文件
+    const jsonPath = path.resolve(__dirname, '../../public/data/clubs.json');
+    const jsonData = await fs.readFile(jsonPath, 'utf8');
+    let clubs = JSON.parse(jsonData);
+
+    // 查找 JSON 中的对应记录
+    const existingIndex = clubs.findIndex(c => c.name === name && c.school === school);
+    const formattedClub = formatClub(dbClub);
+
+    if (existingIndex >= 0) {
+      // 更新现有记录
+      clubs[existingIndex] = formattedClub;
+      console.log(`✏️  更新 JSON 记录: ${name} (${school})`);
+    } else {
+      // 添加新记录
+      clubs.push(formattedClub);
+      console.log(`✅ 添加新 JSON 记录: ${name} (${school})`);
+    }
+
+    // 按 index 排序后写回
+    const dbClubsForSort = await Club.find({}).lean().sort({ index: 1 });
+    const indexMap = new Map();
+    dbClubsForSort.forEach((club, idx) => {
+      indexMap.set(`${club.name}|${club.school}`, idx);
+    });
+
+    clubs.sort((a, b) => {
+      const aIdx = indexMap.get(`${a.name}|${a.school}`) || 0;
+      const bIdx = indexMap.get(`${b.name}|${b.school}`) || 0;
+      return aIdx - bIdx;
+    });
+
+    await fs.writeFile(jsonPath, JSON.stringify(clubs, null, 2), 'utf-8');
+
+    return res.json({
+      success: true,
+      message: `原子化合并成功: ${identifier}`,
+      data: {
+        action: existingIndex >= 0 ? '更新' : '创建',
+        club: {
+          name: dbClub.name,
+          school: dbClub.school
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Atomic merge DB→JSON error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'MERGE_FAILED',
+      message: error.message || '原子化合并失败'
+    });
+  }
+});
+
+/**
+ * POST /api/sync/overwrite-json
+ * 用 Database 中的所有数据覆盖 JSON 文件
+ * 这是 replace 端点的反向操作（DB → JSON）
+ */
+router.post('/overwrite-json', authenticate, async (req, res) => {
+  try {
+    const dbClubs = await Club.find({}).lean().sort({ index: 1, name: 1 });
+
+    if (!dbClubs || dbClubs.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'NO_DATA',
+        message: '数据库中没有任何社团'
+      });
+    }
+
+    // 格式化所有 Database 记录为 JSON 格式
+    const formattedClubs = dbClubs.map(club => formatClub(club));
+
+    // 写入 JSON 文件
+    const jsonPath = path.resolve(__dirname, '../../public/data/clubs.json');
+    await fs.writeFile(jsonPath, JSON.stringify(formattedClubs, null, 2), 'utf-8');
+
+    console.log(`✅ 成功用 Database 覆盖 JSON 文件，共 ${formattedClubs.length} 个社团`);
+
+    return res.json({
+      success: true,
+      message: '成功用 Database 数据覆盖 JSON 文件',
+      data: {
+        total: formattedClubs.length,
+        action: 'Database → JSON'
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Overwrite JSON error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'OVERWRITE_FAILED',
+      message: error.message || '覆盖失败'
+    });
+  }
+});
+
 module.exports = router;

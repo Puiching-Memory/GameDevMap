@@ -33,6 +33,7 @@ function initSyncModule() {
   // 检查必要的 DOM 元素
   const compareBtn = document.getElementById('compareBtn');
   const migrateJsonToDbBtn = document.getElementById('migrateJsonToDbBtn');
+  const migrateDbToJsonBtn = document.getElementById('migrateDbToJsonBtn');
   const mergeBtn = document.getElementById('mergeBtn');
   const replaceBtn = document.getElementById('replaceBtn');
   
@@ -40,6 +41,7 @@ function initSyncModule() {
     console.warn('⚠️  Sync buttons not found in DOM:', {
       compareBtn: !!compareBtn,
       migrateJsonToDbBtn: !!migrateJsonToDbBtn,
+      migrateDbToJsonBtn: !!migrateDbToJsonBtn,
       mergeBtn: !!mergeBtn,
       replaceBtn: !!replaceBtn
     });
@@ -91,34 +93,29 @@ function initSyncModule() {
     }
   });
 
-  // Migrate JSON to Database
+  // Migrate/overwrite: JSON to Database
   migrateJsonToDbBtn.addEventListener('click', async () => {
-    if (!confirm('⚠️ 警告：JSON → Database 迁移\n\n此操作将：\n1. 清空数据库中的所有记录\n2. 从 clubs.json 导入所有数据到数据库\n\n数据库中的现有数据将被完全删除！\n\n确定要继续吗？')) {
+    if (!confirm('确定要用 JSON 文件覆盖 Database 吗？\n\n此操作将：\n- 删除 Database 中的所有现有数据\n- 导入 JSON 文件中的所有社团\n- 可能导致 Database 独有的记录被删除')) {
       return;
     }
 
     try {
       migrateJsonToDbBtn.disabled = true;
-      migrateJsonToDbBtn.textContent = '迁移中...';
+      migrateJsonToDbBtn.textContent = '覆盖中...';
       clearMessage();
 
-      const response = await authFetch('/api/sync/migrate-json-to-db', {
+      const response = await authFetch('/api/sync/replace', {
         method: 'POST'
       });
 
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.message || '迁移失败');
+        throw new Error(result.message || '覆盖失败');
       }
 
-      const data = result.data;
       showMessage(
-        `JSON → Database 迁移完成！\n\n` +
-        `✓ 导入: ${data.imported} 个社团\n` +
-        `✗ 跳过: ${data.skipped} 个社团\n` +
-        `📄 JSON 总数: ${data.totalInJson}\n` +
-        `💾 数据库总数: ${data.totalInDb}`,
+        `✅ 用 JSON 覆盖 Database 完成！\n\n总计: ${result.data.total} 个社团`,
         'success'
       );
 
@@ -126,17 +123,61 @@ function initSyncModule() {
       compareBtn.click();
 
     } catch (error) {
-      console.error('Migration error:', error);
+      console.error('Overwrite DB error:', error);
       if (error.message === 'SERVICE_UNAVAILABLE') {
         showMessage('数据库连接暂时不可用，请稍后再试', 'warning');
       } else {
-        showMessage(error.message || '迁移失败，请重试', 'error');
+        showMessage(error.message || '覆盖失败，请重试', 'error');
       }
     } finally {
       migrateJsonToDbBtn.disabled = false;
-      migrateJsonToDbBtn.textContent = 'JSON → Database';
+      migrateJsonToDbBtn.textContent = '用 JSON 覆盖 Database';
     }
   });
+
+  // Migrate/overwrite: Database to JSON
+  if (migrateDbToJsonBtn) {
+    migrateDbToJsonBtn.addEventListener('click', async () => {
+      if (!confirm('确定要用 Database 覆盖 JSON 文件吗？\n\n此操作将：\n- 使用 Database 中的所有数据覆盖 JSON 文件\n- JSON 文件中独有的记录将被删除\n- 所有社团按 index 排序')) {
+        return;
+      }
+
+      try {
+        migrateDbToJsonBtn.disabled = true;
+        migrateDbToJsonBtn.textContent = '覆盖中...';
+        clearMessage();
+
+        const response = await authFetch('/api/sync/overwrite-json', {
+          method: 'POST'
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || '覆盖失败');
+        }
+
+        showMessage(
+          `✅ 用 Database 覆盖 JSON 完成！\n\n总计: ${result.data.total} 个社团`,
+          'success'
+        );
+
+        // Refresh comparison
+        compareBtn.click();
+
+      } catch (error) {
+        console.error('Overwrite JSON error:', error);
+        if (error.message === 'SERVICE_UNAVAILABLE') {
+          showMessage('数据库连接暂时不可用，请稍后再试', 'warning');
+        } else {
+          showMessage(error.message || '覆盖失败，请重试', 'error');
+        }
+      } finally {
+        migrateDbToJsonBtn.disabled = false;
+        migrateDbToJsonBtn.textContent = '用 Database 覆盖 JSON';
+      }
+    });
+  }
 
   // Merge data
   mergeBtn.addEventListener('click', async () => {
@@ -248,7 +289,7 @@ function initSyncModule() {
       'only-db': {
         title: '仅在数据库中的社团',
         items: details.dbOnly,
-        template: (club) => `
+        template: (club, index) => `
           <div class="club-item">
             <div class="club-header">
               <div>
@@ -257,13 +298,18 @@ function initSyncModule() {
               </div>
               <span class="badge info">仅在数据库</span>
             </div>
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
+              <button class="atomic-merge-single-btn" data-action="db-to-json" data-identifier="${escapeHtml(club.name)}|${escapeHtml(club.school)}" style="width: 100%; padding: 0.5rem; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                📥 导入到 JSON
+              </button>
+            </div>
           </div>
         `
       },
       'only-json': {
         title: '仅在 JSON 文件中的社团',
         items: details.jsonOnly,
-        template: (club) => `
+        template: (club, index) => `
           <div class="club-item">
             <div class="club-header">
               <div>
@@ -272,13 +318,18 @@ function initSyncModule() {
               </div>
               <span class="badge danger">⚠️ 仅在 JSON</span>
             </div>
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
+              <button class="atomic-merge-single-btn" data-action="json-to-db" data-identifier="${escapeHtml(club.name)}|${escapeHtml(club.school)}" style="width: 100%; padding: 0.5rem; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                📤 导入到 Database
+              </button>
+            </div>
           </div>
         `
       },
       'differences': {
         title: '有差异的记录',
         items: details.different,
-        template: (item) => `
+        template: (item, index) => `
           <div class="diff-item">
             <div class="club-header">
               <div>
@@ -302,6 +353,17 @@ function initSyncModule() {
                 </div>
               </div>
             `).join('')}
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
+              <div style="font-size: 0.9rem; margin-bottom: 0.75rem; color: #666;">原子化合并：</div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="atomic-merge-btn" data-action="db-to-json" data-index="${index}" style="flex: 1; padding: 0.5rem; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                  📥 Database → JSON
+                </button>
+                <button class="atomic-merge-btn" data-action="json-to-db" data-index="${index}" style="flex: 1; padding: 0.5rem; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                  📤 JSON → Database
+                </button>
+              </div>
+            </div>
           </div>
         `
       },
@@ -318,7 +380,7 @@ function initSyncModule() {
               <span class="badge warning">${item.records.length} 条重复</span>
             </div>
             <div style="margin-top: 1rem;">
-              <div class="diff-label">重复记录列表：</div>
+              <div class="diff-label">重复记录列表（根据 name + school）：</div>
               ${item.records.map((record, idx) => `
                 <div class="club-item" style="margin-top: 0.5rem; padding: 0.75rem; background: ${idx % 2 === 0 ? '#f9f9f9' : '#fff'}; border-left: 3px solid ${record.source === 'database' ? '#3b82f6' : '#f59e0b'};">
                   <div style="display: flex; justify-content: space-between; align-items: start;">
@@ -326,7 +388,7 @@ function initSyncModule() {
                       <div class="club-name" style="font-size: 0.9rem;">${escapeHtml(record.name)}</div>
                       <div class="club-school" style="font-size: 0.85rem;">${escapeHtml(record.school)}</div>
                       <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
-                        ID: ${escapeHtml(record.id)}
+                        标识: ${escapeHtml(record.name)}|${escapeHtml(record.school)}
                       </div>
                     </div>
                     <span class="badge ${record.source === 'database' ? 'info' : 'warning'}" style="font-size: 0.75rem;">
@@ -366,7 +428,70 @@ function initSyncModule() {
       if (tabData.items.length === 0) {
         container.innerHTML = `<p class="loading">没有 ${tabData.title}</p>`;
       } else {
-        container.innerHTML = tabData.items.map(item => tabData.template(item)).join('');
+        container.innerHTML = tabData.items.map((item, index) => tabData.template(item, index)).join('');
+        
+        // 为原子化合并按钮绑定事件
+        if (tabName === 'differences') {
+          document.querySelectorAll('.atomic-merge-btn').forEach(btn => {
+            btn.addEventListener('click', handleAtomicMerge);
+          });
+        } else if (tabName === 'only-db' || tabName === 'only-json') {
+          document.querySelectorAll('.atomic-merge-single-btn').forEach(btn => {
+            btn.addEventListener('click', handleAtomicMergeSingle);
+          });
+        }
+      }
+    }
+
+    // 单条记录原子化合并处理函数
+    async function handleAtomicMergeSingle(e) {
+      const action = e.target.getAttribute('data-action');
+      const identifier = e.target.getAttribute('data-identifier');
+      
+      const confirmMsg = action === 'db-to-json' 
+        ? `确定要将 Database 中的 "${identifier}" 导入到 JSON 吗？`
+        : `确定要将 JSON 中的 "${identifier}" 导入到 Database 吗？`;
+
+      if (!confirm(confirmMsg)) {
+        return;
+      }
+
+      try {
+        e.target.disabled = true;
+        const originalText = e.target.textContent;
+        e.target.textContent = '处理中...';
+        clearMessage();
+
+        const endpoint = action === 'db-to-json' 
+          ? '/api/sync/atomic-merge-db-to-json'
+          : '/api/sync/atomic-merge-json-to-db';
+
+        const response = await authFetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || '合并失败');
+        }
+
+        showMessage(
+          `✅ 原子化合并成功！\n\n社团: ${identifier}\n方向: ${action === 'db-to-json' ? 'Database → JSON' : 'JSON → Database'}`,
+          'success'
+        );
+
+        // 自动刷新对比结果
+        setTimeout(() => compareBtn.click(), 1000);
+
+      } catch (error) {
+        console.error('Atomic merge single error:', error);
+        showMessage(error.message || '原子化合并失败，请重试', 'error');
+      } finally {
+        e.target.disabled = false;
+        e.target.textContent = originalText;
       }
     }
 
