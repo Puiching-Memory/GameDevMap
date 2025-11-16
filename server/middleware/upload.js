@@ -2,8 +2,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// 存放提交上传文件的目录
-const uploadDir = path.join(__dirname, '../../data/submissions');
+// 存放上传文件的目录
+const uploadDir = path.join(__dirname, '../../public/assets/submissions');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

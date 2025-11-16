@@ -27,7 +27,7 @@ async function processApprovedImage(logoPath) {
 
   // 定义路径
   const projectRoot = path.resolve(__dirname, '../..');
-  const sourcePath = path.join(projectRoot, 'data', 'submissions', filename);
+  const sourcePath = path.join(projectRoot, 'public', 'assets', 'submissions', filename);
   const targetPath = path.join(projectRoot, 'public', 'assets', 'logos', filename);
 
   try {

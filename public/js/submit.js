@@ -331,10 +331,27 @@ form.addEventListener('submit', async (event) => {
       }
       
       // Get coordinates - use edited values if available, otherwise use original
-      const latStr = formData.get('latitude') || selectedClub.latitude;
-      const lngStr = formData.get('longitude') || selectedClub.longitude;
-      latitude = parseFloat(latStr);
-      longitude = parseFloat(lngStr);
+      let latitude, longitude;
+      const latStr = formData.get('latitude');
+      const lngStr = formData.get('longitude');
+      
+      if (latStr && lngStr) {
+        latitude = parseFloat(latStr);
+        longitude = parseFloat(lngStr);
+      } else if (selectedClub.coordinates && Array.isArray(selectedClub.coordinates)) {
+        // 新格式：coordinates 数组 [longitude, latitude]
+        longitude = selectedClub.coordinates[0];
+        latitude = selectedClub.coordinates[1];
+      } else if (selectedClub.latitude !== undefined && selectedClub.longitude !== undefined) {
+        // 旧格式：分离的 latitude/longitude 字段
+        latitude = selectedClub.latitude;
+        longitude = selectedClub.longitude;
+      } else {
+        throw new Error('无法获取有效的坐标信息');
+      }
+      
+      latitude = parseFloat(latitude);
+      longitude = parseFloat(longitude);
       validateCoordinates(latitude, longitude);
       
       // Get tags - use edited values if available, otherwise use original
@@ -637,7 +654,22 @@ function populateEditInterface(club) {
   // Set logo
   const logoToUse = club.logo;
   if (logoToUse) {
-    displayElements.logo.src = `/assets/compressedLogos/${logoToUse}`;
+    const logoBase = logoToUse.split('.')[0]; // Remove extension to be format-agnostic
+    
+    // Try compressed version first (converted to PNG by compress script)
+    displayElements.logo.src = `/assets/compressedLogos/${logoBase}.png`;
+    
+    // Add fallback mechanism: if compressed version fails, try original
+    displayElements.logo.onerror = function() {
+      // Try original logo
+      displayElements.logo.src = `/assets/logos/${logoToUse}`;
+      displayElements.logo.onerror = function() {
+        // If both fail, hide and show placeholder
+        displayElements.logo.style.display = 'none';
+        displayElements.logoPlaceholder.style.display = 'flex';
+      };
+    };
+    
     displayElements.logo.style.display = 'block';
     displayElements.logoPlaceholder.style.display = 'none';
   } else {
